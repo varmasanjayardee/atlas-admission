@@ -111,6 +111,8 @@ export const visitSchema = z.object({
   slot: slotSchema,
   campus_name: z.string(),
   campus_address: z.string(),
+  /** Presigned campus photo for the ticket's poster; null if the campus has none */
+  campus_image: z.string().nullable(),
   /** QR of the gate pass code, as an SVG data URI */
   gate_pass_qr: z.string(),
   hearing_aid: z.boolean(),

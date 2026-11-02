@@ -80,6 +80,7 @@ export function VisitDayStep({ admission, state, goNext }: StepContentProps) {
       <StepBody>
         <div className="rounded-2xl bg-muted/70 px-4 py-6">
           <Ticket
+            image={visit.campus_image}
             campus={visit.campus_name.trim()}
             visitType={museum ? "Museum Guide" : "Counsellor-led"}
             when={[
@@ -222,6 +223,7 @@ const NOTCHES = {
 
 /** The visit pass as an event ticket: poster, the when, a tear line, and the gate stub */
 function Ticket({
+  image,
   campus,
   visitType,
   when,
@@ -233,6 +235,7 @@ function Ticket({
   reference,
   visitedAt,
 }: {
+  image: string | null;
   campus: string;
   visitType: string;
   when: [string, string][];
@@ -251,6 +254,8 @@ function Ticket({
       className="mx-auto max-w-sm drop-shadow-[0_18px_28px_color-mix(in_oklab,var(--navy)_22%,transparent)]"
     >
       <header className="relative isolate h-44 overflow-hidden rounded-t-[1.75rem] bg-navy text-white">
+        {/* eslint-disable-next-line @next/next/no-img-element -- presigned bucket URL */}
+        {image && <img src={image} alt="" className="absolute inset-0 -z-10 size-full object-cover" />}
         <div className="absolute inset-0 -z-10 bg-linear-to-t from-navy via-navy/70 to-navy/15" />
         <div className="absolute inset-x-5 bottom-4">
           <span className="rounded-full bg-white/95 px-2.5 py-1 text-xs font-semibold text-navy">{visitType}</span>
