@@ -1,6 +1,6 @@
 export const site = {
   school: "The Ardee School",
-  helpEmail: "support@myatlasedu.ai",
+  helpEmail: "admissions@theardeeschool.com",
   routes: {
     login: "/login",
   },
