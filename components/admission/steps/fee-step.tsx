@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { format, parseISO } from "date-fns";
 import { CircleAlertIcon, CircleCheckIcon, Loader2Icon, LockIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { formatCurrency } from "@/lib/format";
+import { feeNote, formatCurrency } from "@/lib/format";
 import { JOURNEY_STEPS } from "@/lib/journey";
 import { site } from "@/lib/site";
 import { cn } from "@/lib/utils";
@@ -143,11 +143,9 @@ export function FeeStep({ admission, step, state, goNext, kind }: StepContentPro
                 <div key={item.id} className="flex items-center justify-between gap-4 py-3">
                   <dt>
                     {item.label}
-                    {item.is_refundable && (
-                      <span className="ml-2 rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700">Refundable</span>
-                    )}
+                    {feeNote(item) && <span className="block text-xs text-muted-foreground">{feeNote(item)}</span>}
                   </dt>
-                  <dd className="font-medium tabular-nums">{formatCurrency(item.amount)}</dd>
+                  <dd className={cn("font-medium tabular-nums", item.is_optional && "text-muted-foreground")}>{formatCurrency(item.annual_amount)}</dd>
                 </div>
               ))}
               {amount && (
@@ -160,21 +158,12 @@ export function FeeStep({ admission, step, state, goNext, kind }: StepContentPro
           )}
         </StepSection>
 
-        {kind === "admission" && fees.data && (
+        {kind === "admission" && registrationPaid && (
           <StepSection title="Around it">
             <dl className="divide-y rounded-xl bg-muted/50 px-4 text-sm">
-              {registrationPaid && (
-                <div className="flex justify-between gap-4 py-3">
-                  <dt className="text-muted-foreground">Registration fee, already paid</dt>
-                  <dd className="font-medium text-green-700 tabular-nums">{formatCurrency(registrationPaid.amount)}</dd>
-                </div>
-              )}
               <div className="flex justify-between gap-4 py-3">
-                <dt className="text-muted-foreground">
-                  School fee after joining
-                  <span className="block text-xs">Per year, billed by term</span>
-                </dt>
-                <dd className="font-medium tabular-nums">{formatCurrency(fees.data.school_fee.total)}</dd>
+                <dt className="text-muted-foreground">Registration fee, already paid</dt>
+                <dd className="font-medium text-green-700 tabular-nums">{formatCurrency(registrationPaid.amount)}</dd>
               </div>
             </dl>
           </StepSection>

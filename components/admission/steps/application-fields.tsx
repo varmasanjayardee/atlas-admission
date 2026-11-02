@@ -20,17 +20,23 @@ interface FieldInputProps {
   value: unknown;
   onChange: (value: unknown) => void;
   campuses: { id: number; name: string }[];
+  /** The chosen campus's academic years, for options: "academic_years" */
+  years: { id: number; name: string }[];
   error?: string;
   disabled?: boolean;
 }
 
 /** One application form answer, drawn from its config in lib/application-form.ts */
-export function FieldInput({ field, value, onChange, campuses, error, disabled }: FieldInputProps) {
+export function FieldInput({ field, value, onChange, campuses, years, error, disabled }: FieldInputProps) {
+  console.log("FieldInput", { field, value, error, disabled });
   const id = useId();
+  const byId = field.options === "campuses" || field.options === "academic_years";
   const options =
     field.options === "campuses"
       ? campuses.map((c) => ({ value: String(c.id), label: c.name }))
-      : (field.options ?? []).map(optionOf);
+      : field.options === "academic_years"
+        ? years.map((y) => ({ value: String(y.id), label: y.name }))
+        : (field.options ?? []).map(optionOf);
   const label = (
     <>
       {field.label}
@@ -76,7 +82,7 @@ export function FieldInput({ field, value, onChange, campuses, error, disabled }
           aria-invalid={!!error}
           disabled={disabled}
           value={value == null ? "" : String(value)}
-          onChange={(e) => onChange(field.options === "campuses" ? (e.target.value ? Number(e.target.value) : null) : e.target.value)}
+          onChange={(e) => onChange(byId ? (e.target.value ? Number(e.target.value) : null) : e.target.value)}
         >
           <option value="">Choose</option>
           {options.map((o) => (
@@ -138,17 +144,34 @@ export function FieldInput({ field, value, onChange, campuses, error, disabled }
 }
 
 /** A document answer: uploads as soon as a file is chosen */
-export function FileInput({ field, child, disabled }: { field: FormField; child: Child | null; disabled?: boolean }) {
+/**
+ * One document upload. Before the child is saved there's nowhere to upload to, so the
+ * file is held (`picked`/`onPick`) and the form uploads it right after saving the child.
+ */
+export function FileInput({
+  field,
+  child,
+  disabled,
+  picked,
+  onPick,
+}: {
+  field: FormField;
+  child: Child | null;
+  disabled?: boolean;
+  picked?: File;
+  onPick?: (file: File) => void;
+}) {
   const id = useId();
   const upload = useUploadDocument(child?.id);
   const document = child?.documents.find((d) => d.kind === field.key);
   // Admissions sent it back: replaceable even once the application is submitted
   const sentBack = document?.status === "reupload_requested";
-  const locked = (disabled && !sentBack) || !child;
+  const locked = (disabled && !sentBack) || (!child && !onPick);
 
   const onFile = (file: File | undefined) => {
     if (!file) return;
     if (file.size > 10 * 1024 * 1024) return toast.error("The file is larger than 10 MB.");
+    if (!child) return onPick?.(file);
     upload.mutate({ kind: field.key, file }, { onSuccess: () => toast.success(`${field.label} uploaded`), onError: (e) => toast.error(e.message) });
   };
 
@@ -166,13 +189,15 @@ export function FileInput({ field, child, disabled }: { field: FormField; child:
         )}
       >
         <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-          {upload.isPending ? <Loader2Icon className="size-4 animate-spin" /> : document ? <CircleCheckIcon className="size-4" /> : <CameraIcon className="size-4" />}
+          {upload.isPending ? <Loader2Icon className="size-4 animate-spin" /> : document || picked ? <CircleCheckIcon className="size-4" /> : <CameraIcon className="size-4" />}
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-sm font-semibold">{document ? document.original_name : "Take a photo or choose a file"}</span>
+          <span className="block truncate text-sm font-semibold">{document?.original_name ?? picked?.name ?? "Take a photo or choose a file"}</span>
           <span className="block text-xs text-muted-foreground">
             {!child
-              ? "Save the child's details first"
+              ? picked
+                ? "Uploads when you save this section"
+                : "PDF, JPG or PNG, up to 10 MB"
               : sentBack
                 ? `Admissions asked for a new copy: ${document.reupload_note}`
                 : document

@@ -57,12 +57,11 @@ const feeItemSchema = z.object({
 
 const feeGroupSchema = z.object({ items: z.array(feeItemSchema), total: z.string() });
 
-/** GET children/<id>/fees/: the counsellor's fee plan for the child's campus, year and grade */
+/** GET children/<id>/fees/: the child's registration (step 2) and admission (step 7) fee plans */
 export const childFeesSchema = z.object({
   plan: z.object({ campus: z.string(), academic_year: z.string(), grade: z.string(), terms_per_year: z.number() }),
   registration: feeGroupSchema,
   admission: feeGroupSchema,
-  school_fee: feeGroupSchema,
 });
 
 export type ChildFees = z.infer<typeof childFeesSchema>;
@@ -136,7 +135,9 @@ export const childSchema = z.object({
   mother_tongue: text,
   home_languages: strings,
   grade: text,
-  academic_year: text,
+  /** A schools.AcademicYear id of the chosen campus */
+  academic_year: z.number().nullable(),
+  academic_year_name: z.string().nullable(),
   campus: z.number().nullable(),
   // Previous schooling
   is_attending_school: z.boolean(),

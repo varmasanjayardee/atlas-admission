@@ -23,3 +23,16 @@ export function getInitials(name: string) {
 // "1000.00" -> "₹1,000"; paise only when there are some
 const inr = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", minimumFractionDigits: 0, maximumFractionDigits: 2 });
 export const formatCurrency = (amount: string | number) => inr.format(Number(amount));
+
+const PER = { annual: "a year", term: "a term", monthly: "a month" } as const;
+
+/** Under a fee line: how it's charged, e.g. "₹3,000 a term · optional, not in the total" */
+export function feeNote(item: { amount: string; frequency: "one_time" | keyof typeof PER; is_optional: boolean; is_refundable: boolean }) {
+  return [
+    item.frequency !== "one_time" && `${formatCurrency(item.amount)} ${PER[item.frequency]}`,
+    item.is_refundable && "refundable",
+    item.is_optional && "optional, not in the total",
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}

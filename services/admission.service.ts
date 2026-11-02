@@ -54,9 +54,11 @@ export function useAdmission(studentId: string | undefined) {
   });
 }
 
-const campusSchema = z.array(z.object({ id: z.number(), name: z.string() }));
+const campusSchema = z.array(
+  z.object({ id: z.number(), name: z.string(), academic_years: z.array(z.object({ id: z.number(), name: z.string() })) })
+);
 
-/** Campus choices for the application form */
+/** Campus choices for the application form, each with its open academic years */
 export function useCampuses() {
   return useQuery({
     queryKey: ["campuses"],
@@ -107,8 +109,10 @@ async function uploadDocument(documentsUrl: string, kind: string, file: File) {
 export function useUploadDocument(childId: number | undefined) {
   const queryClient = useQueryClient();
 
-  return useMutation<Child, Error, { kind: string; file: File }>({
-    mutationFn: ({ kind, file }) => uploadDocument(`/admission/children/${childId}/documents/`, kind, file).then((r) => childSchema.parse(r.data)),
+  // `childId` in the call: a child saved moments ago, whose photo was picked before it existed
+  return useMutation<Child, Error, { kind: string; file: File; childId?: number }>({
+    mutationFn: ({ kind, file, ...vars }) =>
+      uploadDocument(`/admission/children/${vars.childId ?? childId}/documents/`, kind, file).then((r) => childSchema.parse(r.data)),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: authKeys.me }),
   });
 }

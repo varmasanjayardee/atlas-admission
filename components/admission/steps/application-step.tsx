@@ -20,7 +20,7 @@ import { zodRule } from "@/lib/form";
 import { JOURNEY_STEPS } from "@/lib/journey";
 import { cn } from "@/lib/utils";
 import { phoneSchema, type Child, type Lead } from "@/schemas/auth.schema";
-import { useCampuses, useSaveChild, useSaveFamily, useSubmitApplication } from "@/services/admission.service";
+import { useCampuses, useSaveChild, useSaveFamily, useSubmitApplication, useUploadDocument } from "@/services/admission.service";
 import { useProfileStore } from "@/store/profile.store";
 import { z } from "zod";
 import { FieldInput, FileInput } from "./application-fields";
@@ -240,7 +240,7 @@ export function ProgressRing({ value }: { value: number }) {
 
 type FormValues = { values: Values; rows: Values[] };
 
-const emptyOf = (field: FormField) => (field.type === "toggle" ? false : field.type === "chips" ? [] : field.options === "campuses" ? null : "");
+const emptyOf = (field: FormField) => (field.type === "toggle" ? false : field.type === "chips" ? [] : field.options === "campuses" || field.options === "academic_years" ? null : "");
 
 const rulesOf = (field: FormField) =>
   field.type === "tel"
@@ -291,12 +291,15 @@ function SectionEditor({
 }) {
   const saveChild = useSaveChild();
   const saveFamily = useSaveFamily();
+  const upload = useUploadDocument(child?.id);
+  // Files picked for a child not saved yet, uploaded once it is
+  const [picked, setPicked] = useState<Record<string, File>>({});
   const selectStudent = useProfileStore((s) => s.selectStudent);
   const { data: campuses = [] } = useCampuses();
-  const { control, handleSubmit, setError } = useForm<FormValues>({ defaultValues: initialValues(section, lead, child) });
+  const { control, handleSubmit, setError, setValue } = useForm<FormValues>({ defaultValues: initialValues(section, lead, child) });
   const rows = useFieldArray({ control, name: "rows" });
   const index = APPLICATION_SECTIONS.indexOf(section);
-  const isBusy = saveChild.isPending || saveFamily.isPending;
+  const isBusy = saveChild.isPending || saveFamily.isPending || upload.isPending;
 
   // DRF errors: { field: ["msg"] } for answers, { guardians: [{ mobile: ["msg"] }, {}] } for rows
   const showErrors = (error: Error) => {
@@ -329,8 +332,10 @@ function SectionEditor({
         // The API wants null, not "", for an empty date
         const payload = { ...values, ...("date_of_birth" in values && { date_of_birth: values.date_of_birth || null }) };
         const saved = await saveChild.mutateAsync({ id: child?.id, values: payload });
-        // A new child becomes the one being viewed
+        // A new child becomes the one being viewed (before uploading, so a failed upload can't lead to saving them twice)
         if (!child) selectStudent(String(saved.id));
+        for (const [kind, file] of Object.entries(picked)) await upload.mutateAsync({ kind, file, childId: saved.id });
+        setPicked({});
       }
       onSaved();
     } catch (error) {
@@ -338,10 +343,17 @@ function SectionEditor({
     }
   });
 
-  const answers = (prefix: `values` | `rows.${number}`, fields: FormField[]) =>
+  const answers = (prefix: `values` | `rows.${number}`, fields: FormField[], values?: Values) =>
     fields.map((field) =>
       field.type === "file" ? (
-        <FileInput key={field.key} field={field} child={child} disabled={readOnly} />
+        <FileInput
+          key={field.key}
+          field={field}
+          child={child}
+          disabled={readOnly}
+          picked={picked[field.key]}
+          onPick={(file) => setPicked((p) => ({ ...p, [field.key]: file }))}
+        />
       ) : (
         <Controller
           key={field.key}
@@ -352,8 +364,13 @@ function SectionEditor({
             <FieldInput
               field={field}
               value={input.value}
-              onChange={input.onChange}
+              onChange={(value) => {
+                input.onChange(value);
+                // A new campus has its own academic years
+                if (prefix === "values" && field.key === "campus") setValue("values.academic_year", null);
+              }}
               campuses={campuses}
+              years={campuses.find((c) => c.id === values?.campus)?.academic_years ?? []}
               error={fieldState.error?.message}
               disabled={readOnly}
             />
@@ -409,7 +426,7 @@ function SectionEditor({
             )}
           </>
         ) : (
-          <SectionAnswers control={control} section={section} child={child} render={(fields) => answers("values", fields)} />
+          <SectionAnswers control={control} section={section} child={child} render={(fields, values) => answers("values", fields, values)} />
         )}
       </StepBody>
 
@@ -433,11 +450,11 @@ function SectionAnswers({
   control: Control<FormValues>;
   section: FormSection;
   child: Child | null;
-  render: (fields: FormField[]) => React.ReactNode;
+  render: (fields: FormField[], values: Values) => React.ReactNode;
 }) {
   const values = useWatch({ control, name: "values" });
   const uploaded = Object.fromEntries((child?.documents ?? []).map((d) => [d.kind, d]));
-  return <div className="space-y-5">{render(visibleFields(section, { ...values, ...uploaded }))}</div>;
+  return <div className="space-y-5">{render(visibleFields(section, { ...values, ...uploaded }), values)}</div>;
 }
 
 function RepeatRow({

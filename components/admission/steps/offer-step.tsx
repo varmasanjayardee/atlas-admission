@@ -5,7 +5,7 @@ import { differenceInCalendarDays, differenceInHours, format, parseISO } from "d
 import { CalendarClockIcon, CircleCheckIcon, CircleXIcon, Loader2Icon, ShieldCheckIcon, WalletIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { formatCurrency } from "@/lib/format";
+import { feeNote, formatCurrency } from "@/lib/format";
 import { JOURNEY_STEPS } from "@/lib/journey";
 import { site } from "@/lib/site";
 import { cn } from "@/lib/utils";
@@ -58,7 +58,7 @@ export function OfferStep({ admission, goNext }: StepContentProps) {
               <p>Dear {parentFirst},</p>
               <p>
                 We are delighted to offer {child.first_name} a place in <strong>{child.grade}</strong> at {admission.campus || "the school"}
-                {child.academic_year && <> for the {child.academic_year} academic year</>}.
+                {child.academic_year_name && <> for the {child.academic_year_name} academic year</>}.
                 {expiresAt && (
                   <>
                     {" "}
@@ -84,9 +84,9 @@ export function OfferStep({ admission, goNext }: StepContentProps) {
                 <div key={item.id} className="flex justify-between gap-4 py-3 text-sm">
                   <dt className="text-muted-foreground">
                     {item.label}
-                    {item.is_refundable && <span className="block text-xs">Refundable</span>}
+                    {feeNote(item) && <span className="block text-xs">{feeNote(item)}</span>}
                   </dt>
-                  <dd className="font-medium tabular-nums">{formatCurrency(item.amount)}</dd>
+                  <dd className="font-medium tabular-nums">{formatCurrency(item.annual_amount)}</dd>
                 </div>
               ))}
               {fees.data && (
@@ -99,15 +99,6 @@ export function OfferStep({ admission, goNext }: StepContentProps) {
                 <div className="flex justify-between gap-4 py-3 text-sm">
                   <dt className="text-muted-foreground">Registration fee</dt>
                   <dd className="font-medium text-green-700">Paid · {formatCurrency(registrationPaid.amount)}</dd>
-                </div>
-              )}
-              {fees.data && (
-                <div className="flex justify-between gap-4 py-3 text-sm">
-                  <dt className="text-muted-foreground">
-                    School fee
-                    <span className="block text-xs">Per year, billed after joining</span>
-                  </dt>
-                  <dd className="font-medium tabular-nums">{formatCurrency(fees.data.school_fee.total)}</dd>
                 </div>
               )}
               {!fees.data && (
