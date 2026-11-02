@@ -9,6 +9,8 @@ export interface StepContentProps {
   state: StepState;
   /** Move the drawer to the following step (closes after the last one) */
   goNext: () => void;
+  /** Shown as a full page (new journey view) rather than in the drawer */
+  page?: boolean;
 }
 
 /** Scrollable middle of the drawer */

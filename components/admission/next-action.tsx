@@ -18,7 +18,7 @@ export function NextAction({ admission }: { admission: Admission }) {
 
   return (
     <section className="flex items-center gap-4 rounded-2xl bg-primary p-4 text-primary-foreground">
-      <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-white text-primary">
+      <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-primary-foreground text-primary">
         <Icon className="size-6" />
       </span>
       <div className="min-w-0 flex-1">
@@ -29,7 +29,7 @@ export function NextAction({ admission }: { admission: Admission }) {
         href={{ query: { step: step.number } }}
         replace
         scroll={false}
-        className="shrink-0 rounded-full bg-white px-4 py-2 text-sm font-semibold text-primary transition-colors hover:bg-white/90 focus-visible:ring-3 focus-visible:ring-white/60 focus-visible:outline-none"
+        className="shrink-0 rounded-full bg-primary-foreground px-4 py-2 text-sm font-semibold text-primary transition-colors hover:bg-primary-foreground/90 focus-visible:ring-3 focus-visible:ring-white/60 focus-visible:outline-none"
       >
         {step.action.cta}
       </Link>
@@ -47,7 +47,7 @@ export function ReuploadBanner({ admission }: { admission: Admission }) {
 
   return (
     <section role="alert" className="flex items-center gap-4 rounded-2xl border border-destructive/30 bg-destructive/5 p-4">
-      <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-destructive text-white">
+      <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-destructive text-destructive-foreground">
         <FileWarningIcon className="size-6" />
       </span>
       <div className="min-w-0 flex-1">
@@ -60,7 +60,7 @@ export function ReuploadBanner({ admission }: { admission: Admission }) {
         href={{ query: { step } }}
         replace
         scroll={false}
-        className="shrink-0 rounded-full bg-destructive px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-destructive/90 focus-visible:ring-3 focus-visible:ring-destructive/40 focus-visible:outline-none"
+        className="shrink-0 rounded-full bg-destructive px-4 py-2 text-sm font-semibold text-destructive-foreground transition-colors hover:bg-destructive/90 focus-visible:ring-3 focus-visible:ring-destructive/40 focus-visible:outline-none"
       >
         Re-upload
       </Link>

@@ -33,18 +33,18 @@ export function JourneyMap({ admission }: { admission: Admission }) {
   return (
     <section
       aria-labelledby="journey-heading"
-      className="relative isolate overflow-hidden rounded-[2rem] bg-[color-mix(in_oklab,var(--primary)_4%,white)] ring-1 ring-navy/10"
+      className="relative isolate overflow-hidden rounded-[2rem] bg-[color-mix(in_oklab,var(--primary)_4%,var(--card))] ring-1 ring-navy-ink/10"
     >
       <MeshBackground />
 
       <header className="relative flex items-end justify-between gap-4 px-6 pt-7 sm:px-8">
         <div>
-          <h2 id="journey-heading" className="font-serif text-4xl leading-none text-navy italic">
+          <h2 id="journey-heading" className="font-serif text-4xl leading-none text-navy-ink italic">
             Your journey
           </h2>
-          <p className="mt-2 text-sm text-navy/70">From application to your Atlas account</p>
+          <p className="mt-2 text-sm text-navy-ink/70">From application to your Atlas account</p>
         </div>
-        <p className="shrink-0 rounded-full bg-white/80 px-3 py-1.5 text-sm font-medium text-navy shadow-sm ring-1 ring-navy/10 backdrop-blur tabular-nums">
+        <p className="shrink-0 rounded-full bg-card/80 px-3 py-1.5 text-sm font-medium text-navy-ink shadow-sm ring-1 ring-navy-ink/10 backdrop-blur tabular-nums">
           {done} of {TOTAL_STEPS} done
         </p>
       </header>
@@ -116,7 +116,7 @@ function Route({ steps }: { steps: Stop[] }) {
             <path d={s.d} {...line} strokeWidth={12} className="stroke-primary" />
           </g>
         ) : (
-          <path key={s.i} d={s.d} {...line} strokeWidth={6} strokeDasharray="2 14" className="stroke-navy/25" />
+          <path key={s.i} d={s.d} {...line} strokeWidth={6} strokeDasharray="2 14" className="stroke-navy-ink/25" />
         )
       )}
     </svg>
@@ -160,8 +160,8 @@ function StepStop({ step, i, state }: Stop) {
         "relative flex size-full items-center justify-center rounded-[1.4rem] transition-transform duration-200",
         openable && "group-hover:-translate-y-0.5",
         state === "done" && "bg-primary text-primary-foreground shadow-xl shadow-primary/35",
-        state === "current" && "bg-white text-primary shadow-xl shadow-primary/25 ring-[3px] ring-primary",
-        state === "upcoming" && "border-2 border-dashed border-navy/20 bg-white/70 text-navy/35 backdrop-blur",
+        state === "current" && "bg-card text-primary shadow-xl shadow-primary/25 ring-[3px] ring-primary",
+        state === "upcoming" && "border-2 border-dashed border-navy-ink/20 bg-card/70 text-navy-ink/35 backdrop-blur",
         state === "closed" && "bg-muted text-muted-foreground"
       )}
     >
@@ -180,8 +180,8 @@ function StepStop({ step, i, state }: Stop) {
         className={cn(
           "absolute -top-2.5 -left-2.5 rounded-md px-1.5 py-0.5 text-xs font-semibold slashed-zero tabular-nums ring-1",
           state === "done" || state === "current"
-            ? "bg-white text-primary ring-primary/40"
-            : "bg-white/80 text-navy/40 ring-navy/15"
+            ? "bg-card text-primary ring-primary/40"
+            : "bg-card/80 text-navy-ink/40 ring-navy-ink/15"
         )}
       >
         {pad(step.number)}
@@ -199,8 +199,8 @@ function StepStop({ step, i, state }: Stop) {
         className={cn(
           "absolute max-w-[11rem] -translate-x-1/2 rounded-full px-3.5 py-1.5 text-center text-sm leading-tight font-medium shadow-sm ring-1",
           state === "upcoming" || state === "closed"
-            ? "bg-white/70 text-navy/50 ring-navy/10 backdrop-blur"
-            : "bg-white text-navy ring-navy/10",
+            ? "bg-card/70 text-navy-ink/50 ring-navy-ink/10 backdrop-blur"
+            : "bg-card text-navy-ink ring-navy-ink/10",
           openable && "group-hover:ring-primary/40"
         )}
         style={{ left: `${x}%`, top: y + NODE / 2 + 12 }}

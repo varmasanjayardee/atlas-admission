@@ -34,7 +34,7 @@ export function OtpDialog({ target, onClose }: OtpDialogProps) {
       >
         {/* key resets the form and timer for a different lead or channel */}
         {target && (
-          <OtpForm key={`${target.accessToken}:${target.channel}`} target={target} onBack={onClose} />
+          <OtpForm key={`${target.accessToken ?? target.identifier}:${target.channel}`} target={target} onBack={onClose} />
         )}
       </DialogContent>
     </Dialog>
@@ -53,14 +53,14 @@ function OtpForm({ target, onBack }: { target: OtpTarget; onBack: () => void }) 
 
   const onSubmit = handleSubmit(({ otp }) =>
     verifyOtp.mutate(
-      { accessToken: target.accessToken, channel: target.channel, otp },
+      { accessToken: target.accessToken, identifier: target.identifier, channel: target.channel, otp },
       { onError: () => reset({ otp: "" }) }
     )
   );
 
   const resend = () =>
     sendOtp.mutate(
-      { accessToken: target.accessToken, channel: target.channel },
+      { accessToken: target.accessToken, identifier: target.identifier, channel: target.channel },
       { onSuccess: secondsLeft.restart }
     );
 

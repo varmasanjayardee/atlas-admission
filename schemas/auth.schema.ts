@@ -35,7 +35,10 @@ export const paymentSchema = z.object({
   kind: z.enum(["registration", "admission"]),
   amount: z.string(),
   status: z.enum(["initiated", "pending", "success", "failed", "cancelled"]),
+  /** ICICI's name for online, "offline" for the desk, "receipt" for an uploaded UPI or bank receipt */
+  gateway: z.string(),
   gateway_transaction_id: z.string(),
+  receipt_url: z.string().nullable(),
   gateway_payment_mode: z.string(),
   failure_reason: z.string(),
   paid_at: z.string().nullable(),
@@ -235,6 +238,8 @@ export const leadSchema = z.object({
   campus: z.string(),
   enquiry_type: z.string(),
   access_token: z.string(),
+  /** Where the login code goes, set on the server (SEND_ADMISSION_OTP_TO_EMAIL) */
+  otp_channel: z.enum(["email", "sms"]),
   created_at: z.string(),
   children: z.array(childSchema),
   // Family sections of the application form, shared by every child
@@ -251,6 +256,10 @@ export const leadSchema = z.object({
   sibling_campus: z.number().nullable(),
   guardians: z.array(guardianSchema),
   emergency_contacts: z.array(emergencyContactSchema),
+  // How the family wants updates; sign-in codes go regardless
+  notify_whatsapp: z.boolean(),
+  notify_email: z.boolean(),
+  notify_sms: z.boolean(),
 });
 
 export type Lead = z.infer<typeof leadSchema>;
@@ -261,6 +270,7 @@ export const verifiedLeadSchema = leadSchema.extend({ session: z.string() });
 export type VerifiedLead = z.infer<typeof verifiedLeadSchema>;
 
 export const otpSentSchema = z.object({
+  channel: z.enum(["email", "sms"]),
   destination: z.string(),
   expires_in: z.number(),
   resend_in: z.number(),

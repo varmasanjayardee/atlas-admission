@@ -1,6 +1,6 @@
 import { differenceInCalendarDays, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
-import { getCurrentStep, getStepState, JOURNEY_PARTS, TOTAL_STEPS } from "@/lib/journey";
+import { endedTitle, getCurrentStep, getStepState, JOURNEY_PARTS, TOTAL_STEPS } from "@/lib/journey";
 import type { Admission } from "@/types/admission.types";
 
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -10,13 +10,6 @@ export function WhereYouAre({ admission }: { admission: Admission }) {
   const part = JOURNEY_PARTS.find((p) => (p.steps as readonly number[]).includes(step.number))!;
   const partLetter = String.fromCharCode(65 + JOURNEY_PARTS.indexOf(part));
   const days = differenceInCalendarDays(new Date(), parseISO(admission.enquiryDate));
-  const ended = {
-    rejected: "This application wasn't successful",
-    not_offered: "This application was not offered a place",
-    declined: "You declined this offer",
-    withdrawn: "This offer expired",
-  };
-  const endedTitle = ended[admission.outcome as keyof typeof ended];
 
   return (
     <section aria-labelledby="where-you-are">
@@ -40,7 +33,7 @@ export function WhereYouAre({ admission }: { admission: Admission }) {
       </p>
 
       <p className="mt-4 text-3xl leading-tight font-bold tracking-tight text-balance">
-        {endedTitle ?? step.action.title}
+        {endedTitle(admission) ?? step.action.title}
       </p>
       <p className="mt-1 text-muted-foreground">
         {step.title} · day {days} since your enquiry

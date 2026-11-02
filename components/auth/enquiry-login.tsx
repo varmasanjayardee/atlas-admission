@@ -5,10 +5,11 @@ import { useRouter } from "next/navigation";
 import { ArrowRightIcon, Loader2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EnquiryForm } from "@/components/auth/enquiry-form";
+import { SignInForm } from "@/components/auth/sign-in-form";
 import { EnquiryOverview, NextSteps } from "@/components/auth/enquiry-summary";
 import { OtpDialog } from "@/components/auth/otp-dialog";
 import { useOtpFlow } from "@/hooks/use-otp-flow";
-import { maskPhone } from "@/lib/format";
+import { maskEmail, maskPhone } from "@/lib/format";
 import type { Lead } from "@/schemas/auth.schema";
 import { useMe } from "@/services/auth.service";
 import { useLead } from "@/services/enquiry.service";
@@ -24,6 +25,8 @@ export function EnquiryLogin({ token: linkToken }: { token?: string }) {
   const otp = useOtpFlow();
   const router = useRouter();
   const { data: me } = useMe();
+  // No link: a new enquiry, or a returning parent signing in by email or mobile
+  const [signingIn, setSigningIn] = useState(false);
 
   // Already verified on this device: skip the OTP, unless the link is for another enquiry
   const signedIn = !!me && (!token || me.access_token === token);
@@ -40,7 +43,7 @@ export function EnquiryLogin({ token: linkToken }: { token?: string }) {
 
   const onCreated = (created: Lead) => {
     switchToken(created.access_token);
-    otp.send(created.access_token);
+    otp.send(created.access_token, created.otp_channel);
   };
 
   if (isLoading) {
@@ -63,17 +66,17 @@ export function EnquiryLogin({ token: linkToken }: { token?: string }) {
 
           <div className="mt-10 flex flex-col gap-10">
             <EnquiryOverview lead={lead} />
-            <NextSteps />
+            <NextSteps channel={lead.otp_channel} />
           </div>
 
           <Button
             size="lg"
             className="mt-10 h-14 rounded-xl text-lg font-semibold"
-            onClick={() => otp.send(lead.access_token)}
+            onClick={() => otp.send(lead.access_token, lead.otp_channel)}
             disabled={otp.isSending}
           >
             {otp.isSending && <Loader2Icon className="animate-spin" />}
-            Verify {maskPhone(lead.phone_number)}
+            Verify {lead.otp_channel === "email" ? maskEmail(lead.email) : maskPhone(lead.phone_number)}
             {!otp.isSending && <ArrowRightIcon data-icon="inline-end" />}
           </Button>
           <p className="mt-5 text-center text-white/80">
@@ -88,7 +91,11 @@ export function EnquiryLogin({ token: linkToken }: { token?: string }) {
           </p>
         </div>
       ) : (
-        <EnquiryForm linkInvalid={!!token && isError} isSendingOtp={otp.isSending} onCreated={onCreated} />
+        signingIn ? (
+          <SignInForm isSending={otp.isSending} onSubmit={otp.signIn} onNewEnquiry={() => setSigningIn(false)} />
+        ) : (
+          <EnquiryForm linkInvalid={!!token && isError} isSendingOtp={otp.isSending} onCreated={onCreated} onSignIn={() => setSigningIn(true)} />
+        )
       )}
 
       <OtpDialog target={otp.target} onClose={otp.close} />

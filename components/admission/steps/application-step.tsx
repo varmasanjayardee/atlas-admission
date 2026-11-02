@@ -17,6 +17,7 @@ import {
   type Values,
 } from "@/lib/application-form";
 import { zodRule } from "@/lib/form";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import { JOURNEY_STEPS } from "@/lib/journey";
 import { cn } from "@/lib/utils";
 import { phoneSchema, type Child, type Lead } from "@/schemas/auth.schema";
@@ -29,37 +30,38 @@ import { StepBody, StepFooter, type StepContentProps } from "./step-layout";
 const nextTitle = JOURNEY_STEPS[1].title;
 
 /** Step 1: the ten-section application form. Family sections are shared by every child. */
-export function ApplicationStep({ admission, state, goNext }: StepContentProps) {
+export function ApplicationStep({ admission, state, goNext, page }: StepContentProps) {
   const [adding, setAdding] = useState(false);
   const [open, setOpen] = useState<string | null>(null);
   const child = adding ? null : admission.child;
   const { lead } = admission;
   // Submitted: every answer stays visible, but changes go through the counsellor
   const readOnly = state === "done" && !adding;
+  // As a page on a wide screen: sections on the left, the open one beside them (no drill-in)
+  const split = useMediaQuery("(min-width: 1024px)") && !!page;
 
-  const section = APPLICATION_SECTIONS.find((s) => s.id === open);
-  if (section) {
-    const index = APPLICATION_SECTIONS.indexOf(section);
-    const following = APPLICATION_SECTIONS[index + 1];
-    return (
-      <SectionEditor
-        // Fresh form per section and child
-        key={`${section.id}:${child?.id ?? "new"}`}
-        section={section}
-        lead={lead}
-        child={child}
-        readOnly={readOnly}
-        onBack={() => setOpen(null)}
-        onSaved={() => {
-          setAdding(false);
-          setOpen(following?.id ?? null);
-        }}
-        isLast={!following}
-      />
-    );
-  }
+  const section =
+    APPLICATION_SECTIONS.find((s) => s.id === open) ??
+    (split ? (APPLICATION_SECTIONS.find((s) => !sectionStats(s, lead, child).complete) ?? APPLICATION_SECTIONS[0]) : undefined);
+  const editor = section && (
+    <SectionEditor
+      // Fresh form per section and child
+      key={`${section.id}:${child?.id ?? "new"}`}
+      section={section}
+      lead={lead}
+      child={child}
+      readOnly={readOnly}
+      onBack={split ? undefined : () => setOpen(null)}
+      onSaved={() => {
+        setAdding(false);
+        setOpen(APPLICATION_SECTIONS[APPLICATION_SECTIONS.indexOf(section) + 1]?.id ?? null);
+      }}
+      isLast={section === APPLICATION_SECTIONS[APPLICATION_SECTIONS.length - 1]}
+    />
+  );
+  if (editor && !split) return editor;
 
-  return (
+  const overview = (
     <Overview
       lead={lead}
       child={child}
@@ -70,7 +72,16 @@ export function ApplicationStep({ admission, state, goNext }: StepContentProps) 
       onCancelAdd={() => setAdding(false)}
       onSubmitted={goNext}
       goNext={goNext}
+      activeId={split ? section?.id : undefined}
     />
+  );
+  if (!split) return overview;
+
+  return (
+    <div className="grid min-h-0 flex-1 grid-cols-[20rem_minmax(0,1fr)] divide-x">
+      <div className="flex min-h-0 flex-col">{overview}</div>
+      <div className="flex min-h-0 flex-col">{editor}</div>
+    </div>
   );
 }
 
@@ -84,6 +95,7 @@ function Overview({
   onCancelAdd,
   onSubmitted,
   goNext,
+  activeId,
 }: {
   lead: Lead;
   child: Child | null;
@@ -94,6 +106,8 @@ function Overview({
   onCancelAdd: () => void;
   onSubmitted: () => void;
   goNext: () => void;
+  /** The section open beside the list (page layout) */
+  activeId?: string;
 }) {
   const submit = useSubmitApplication();
   const progress = formProgress(lead, child);
@@ -157,7 +171,8 @@ function Overview({
                   type="button"
                   disabled={blocked}
                   onClick={() => onOpen(s.id)}
-                  className="flex w-full items-center gap-3 px-4 py-3 text-left outline-none hover:bg-muted/50 focus-visible:bg-muted disabled:opacity-50 disabled:hover:bg-transparent"
+                  aria-current={activeId === s.id ? "step" : undefined}
+                  className="flex w-full items-center gap-3 px-4 py-3 text-left outline-none hover:bg-muted/50 focus-visible:bg-muted disabled:opacity-50 disabled:hover:bg-transparent aria-[current=step]:bg-primary/5"
                 >
                   <span
                     className={cn(
@@ -285,7 +300,8 @@ function SectionEditor({
   lead: Lead;
   child: Child | null;
   readOnly: boolean;
-  onBack: () => void;
+  /** Back to the section list; absent when the list sits beside the form */
+  onBack?: () => void;
   onSaved: () => void;
   isLast: boolean;
 }) {
@@ -383,15 +399,17 @@ function SectionEditor({
     <form onSubmit={onSubmit} noValidate className="flex min-h-0 flex-1 flex-col">
       <StepBody className="space-y-6">
         <div>
-          <button
-            type="button"
-            onClick={onBack}
-            className="-ml-1 flex items-center gap-0.5 rounded-md px-1 py-1 text-sm font-medium text-primary underline-offset-4 outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50"
-          >
-            <ChevronLeftIcon className="size-4" />
-            All sections
-          </button>
-          <h3 className="mt-2 text-lg font-semibold">{section.title}</h3>
+          {onBack && (
+            <button
+              type="button"
+              onClick={onBack}
+              className="-ml-1 mb-2 flex items-center gap-0.5 rounded-md px-1 py-1 text-sm font-medium text-primary underline-offset-4 outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50"
+            >
+              <ChevronLeftIcon className="size-4" />
+              All sections
+            </button>
+          )}
+          <h3 className="text-lg font-semibold">{section.title}</h3>
           <p className="text-xs text-muted-foreground">
             Section {index + 1} of {APPLICATION_SECTIONS.length}
             {section.scope === "family" && " · shared by all your children"}

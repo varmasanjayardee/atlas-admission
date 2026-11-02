@@ -52,7 +52,7 @@ export function OfferStep({ admission, goNext }: StepContentProps) {
         <article className="overflow-hidden rounded-2xl bg-card shadow-[0_12px_32px_-12px_color-mix(in_oklab,var(--navy)_30%,transparent)] ring-1 ring-foreground/5">
           {child.offer_sent_at && expiresAt && <ValidityMeter from={child.offer_sent_at} to={expiresAt} now={now} extended={!!child.offer_extended_at} live={open} />}
           <div className="px-6 pt-6 pb-5">
-            <p className="font-serif text-xl text-navy italic">{site.school}</p>
+            <p className="font-serif text-xl text-navy-ink italic">{site.school}</p>
             <h3 className="mt-4 text-2xl leading-tight font-bold tracking-tight text-balance">An offer of a place for {childName}</h3>
             <div className="mt-4 space-y-3 leading-relaxed text-foreground/90">
               <p>Dear {parentFirst},</p>
@@ -68,7 +68,7 @@ export function OfferStep({ admission, goNext }: StepContentProps) {
               </p>
               {child.review_note && <p className="italic">{child.review_note}</p>}
             </div>
-            <p className="mt-5 font-serif text-lg text-navy italic">Admissions, {site.school}</p>
+            <p className="mt-5 font-serif text-lg text-navy-ink italic">Admissions, {site.school}</p>
             <p className="mt-4 border-t pt-3 text-xs text-muted-foreground">
               {child.offer_sent_at && `Issued ${short(child.offer_sent_at)} · `}Application {child.reference}
             </p>

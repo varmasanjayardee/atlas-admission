@@ -10,6 +10,12 @@ export function maskPhone(v: string) {
   return m ? `${m[1] ? m[1] + " " : ""}${m[2]}••••••${m[3]}` : v;
 }
 
+// "neha@gmail.com" -> "ne••@gmail.com"
+export function maskEmail(email: string) {
+  const [name, domain] = email.split("@");
+  return domain ? `${name.slice(0, 2)}${"•".repeat(Math.max(name.length - 2, 1))}@${domain}` : email;
+}
+
 // "Aarav Sharma" -> "AS"
 export function getInitials(name: string) {
   return name

@@ -1,7 +1,7 @@
 "use client";
 
 import { GraduationCapIcon, KeyRoundIcon, ShieldCheckIcon, UserRoundIcon, UsersIcon } from "lucide-react";
-import { getInitials, maskPhone } from "@/lib/format";
+import { getInitials, maskEmail, maskPhone } from "@/lib/format";
 import { site } from "@/lib/site";
 import { cn } from "@/lib/utils";
 import type { Child } from "@/schemas/auth.schema";
@@ -20,11 +20,6 @@ export interface Account {
   ready: boolean;
   primary?: boolean;
 }
-
-const maskEmail = (email: string) => {
-  const [name, domain] = email.split("@");
-  return domain ? `${name.slice(0, 2)}${"•".repeat(Math.max(name.length - 2, 1))}@${domain}` : email;
-};
 
 /** Step 9: the Atlas accounts being created, one card per student and per guardian */
 export function AccountSetupStep({ admission }: StepContentProps) {
@@ -129,12 +124,12 @@ export function AccountCard({ account: a }: { account: Account }) {
       <div className="flex items-center gap-3 px-4 py-4">
         {a.photo ? (
           // eslint-disable-next-line @next/next/no-img-element -- presigned bucket URL
-          <img src={a.photo} alt="" className="size-14 shrink-0 rounded-xl object-cover ring-2 ring-navy/10" />
+          <img src={a.photo} alt="" className="size-14 shrink-0 rounded-xl object-cover ring-2 ring-navy-ink/10" />
         ) : (
           <span
             className={cn(
               "flex size-14 shrink-0 items-center justify-center rounded-xl text-lg font-semibold",
-              a.kind === "student" ? "bg-primary/10 text-primary" : "bg-navy/10 text-navy"
+              a.kind === "student" ? "bg-primary/10 text-primary" : "bg-navy/10 text-navy-ink"
             )}
           >
             {getInitials(a.name)}

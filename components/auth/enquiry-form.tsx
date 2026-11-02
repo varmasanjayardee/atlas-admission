@@ -18,10 +18,12 @@ interface EnquiryFormProps {
   /** True while the OTP for the new lead is being sent */
   isSendingOtp: boolean;
   onCreated: (lead: Lead) => void;
+  /** "Already have an account?": sign in by email or mobile instead */
+  onSignIn: () => void;
 }
 
 /** No enquiry link: capture the parent's details, then verify their number */
-export function EnquiryForm({ linkInvalid, isSendingOtp, onCreated }: EnquiryFormProps) {
+export function EnquiryForm({ linkInvalid, isSendingOtp, onCreated, onSignIn }: EnquiryFormProps) {
   const createLead = useCreateLead();
   const { register, handleSubmit, formState, setError } = useForm<EnquiryFormInput>({
     defaultValues: { phone_number: "", first_name: "", last_name: "", email: "" },
@@ -96,6 +98,12 @@ export function EnquiryForm({ linkInvalid, isSendingOtp, onCreated }: EnquiryFor
         {isBusy && <Loader2Icon className="animate-spin" />}
         Send code
       </Button>
+      <p className="mt-5 text-center text-white/80">
+        Already have an account?{" "}
+        <button type="button" onClick={onSignIn} className="text-white underline underline-offset-4 hover:no-underline">
+          Sign in
+        </button>
+      </p>
     </form>
   );
 }

@@ -56,7 +56,7 @@ export function VisitorApprove() {
   return (
     <div className="mx-auto max-w-md space-y-6">
       <header>
-        <p className="font-serif text-2xl text-navy italic">{site.school}</p>
+        <p className="font-serif text-2xl text-navy-ink italic">{site.school}</p>
         <h1 className="mt-1 text-2xl font-bold tracking-tight">Visitor check-in</h1>
         <p className="text-sm text-muted-foreground">Enter the gate pass code from the visitor&apos;s ticket.</p>
       </header>

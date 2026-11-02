@@ -1,6 +1,7 @@
 "use client";
 
-import { ChevronDownIcon, LogOutIcon } from "lucide-react";
+import Link from "next/link";
+import { ChevronDownIcon, LogOutIcon, UserIcon } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,7 +43,7 @@ export function ProfileSwitcher() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        className="flex items-center gap-2 rounded-full bg-muted py-1 pr-3 pl-1 text-sm font-medium outline-none hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring/50"
+        className="flex items-center gap-2 rounded-full border bg-card py-1 pr-3 pl-1 text-sm font-medium outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50"
         aria-label={students.length > 1 ? `Viewing ${name}. Switch child or sign out` : `${name}. Account menu`}
       >
         <Avatar name={name} />
@@ -71,6 +72,10 @@ export function ProfileSwitcher() {
         )}
         <DropdownMenuGroup>
           {user && <DropdownMenuLabel className="truncate">{user.name}</DropdownMenuLabel>}
+          <DropdownMenuItem render={<Link href="/profile" />}>
+            <UserIcon />
+            Your profile
+          </DropdownMenuItem>
           <DropdownMenuItem onClick={logout}>
             <LogOutIcon />
             Sign out

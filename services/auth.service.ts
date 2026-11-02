@@ -58,17 +58,19 @@ export function useRequireSession() {
   return me;
 }
 
+/** The enquiry: its link token, or the email or mobile a returning parent typed */
 interface SendOtpInput {
-  accessToken: string;
+  accessToken?: string;
+  identifier?: string;
   channel: OtpChannel;
 }
 
 /** Sends a code to the email/phone already on the lead (the API never takes a destination) */
 export function useSendOtp() {
   return useMutation<OtpSent, Error, SendOtpInput>({
-    mutationFn: ({ accessToken, channel }) =>
+    mutationFn: ({ accessToken, identifier }) =>
       api
-        .post("/admission/otp/send/", { access_token: accessToken, channel })
+        .post("/admission/otp/send/", { access_token: accessToken, identifier })
         .then((r) => otpSentSchema.parse(r.data)),
     onError: (error) => toast.error(error.message),
   });
@@ -80,9 +82,9 @@ export function useVerifyOtp() {
   const setUser = useAuthStore((s) => s.setUser);
 
   return useMutation<VerifiedLead, Error, SendOtpInput & { otp: string }>({
-    mutationFn: ({ accessToken, channel, otp }) =>
+    mutationFn: ({ accessToken, identifier, otp }) =>
       api
-        .post("/admission/otp/verify/", { access_token: accessToken, channel, otp })
+        .post("/admission/otp/verify/", { access_token: accessToken, identifier, otp })
         .then((r) => verifiedLeadSchema.parse(r.data)),
     onSuccess: ({ session, ...lead }) => {
       localStorage.setItem(SESSION_KEY, session);

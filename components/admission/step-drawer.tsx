@@ -10,7 +10,7 @@ import { useStepParam } from "@/hooks/use-step-param";
 import { canOpenStep, getStepState, JOURNEY_STEPS, TOTAL_STEPS, type StepState } from "@/lib/journey";
 import type { Admission } from "@/types/admission.types";
 
-const STATE_BADGE: Record<StepState, { label: string; variant: "default" | "secondary" | "outline" }> = {
+export const STATE_BADGE: Record<StepState, { label: string; variant: "default" | "secondary" | "outline" }> = {
   done: { label: "Completed", variant: "secondary" },
   current: { label: "In progress", variant: "default" },
   upcoming: { label: "Not started", variant: "outline" },

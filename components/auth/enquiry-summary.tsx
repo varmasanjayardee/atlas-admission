@@ -1,13 +1,17 @@
-import { CalendarIcon, FileTextIcon, PhoneIcon } from "lucide-react";
+import { CalendarIcon, FileTextIcon, MailIcon, PhoneIcon } from "lucide-react";
 import { formatIdentifier } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import type { Lead } from "@/schemas/auth.schema";
+import type { Lead, OtpChannel } from "@/schemas/auth.schema";
 
 const sectionLabel = "text-xs font-semibold tracking-[0.2em] uppercase";
 const card = "rounded-2xl bg-card text-card-foreground shadow-lg";
 
+const VERIFY = {
+  sms: { icon: PhoneIcon, title: "Verify your mobile", detail: "A one-time password (OTP) sent directly to your phone" },
+  email: { icon: MailIcon, title: "Verify your email", detail: "A one-time password (OTP) sent to your email" },
+};
+
 const NEXT_STEPS = [
-  { icon: PhoneIcon, title: "Verify your mobile", detail: "A one-time password (OTP) sent directly to your phone" },
   { icon: FileTextIcon, title: "Complete the form", detail: "Saved automatically as you go, finish any time" },
   { icon: CalendarIcon, title: "Pay the fee, then book your visit", detail: "Rs 1,000 registration and campus visit booking" },
 ];
@@ -60,13 +64,13 @@ export function EnquiryOverview({ lead }: { lead: Lead }) {
   );
 }
 
-export function NextSteps() {
+export function NextSteps({ channel }: { channel: OtpChannel }) {
   return (
     <section>
       <h2 className={sectionLabel}>What happens next</h2>
       <ol className={cn(card, "relative mt-3 flex flex-col gap-6 p-6")}>
         <span aria-hidden className="absolute top-12 bottom-12 left-[2.625rem] w-px bg-border" />
-        {NEXT_STEPS.map(({ icon: Icon, title, detail }, i) => {
+        {[VERIFY[channel], ...NEXT_STEPS].map(({ icon: Icon, title, detail }, i) => {
           const active = i === 0;
           return (
             <li key={title} className="relative flex gap-4" aria-current={active ? "step" : undefined}>

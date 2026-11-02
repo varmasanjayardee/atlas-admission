@@ -95,14 +95,14 @@ export function useSaveFamily() {
  * Documents go straight to storage: sign (keyed-backend checks kind, type, size and
  * the step), PUT the file to the presigned URL, then attach the key to the child.
  */
-async function uploadDocument(documentsUrl: string, kind: string, file: File) {
+async function uploadDocument(documentsUrl: string, kind: string, file: File, extra: Record<string, string> = {}) {
   const contentType = file.type || ({ pdf: "application/pdf", png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg" } as Record<string, string>)[file.name.split(".").pop()?.toLowerCase() ?? ""] || "";
   const signed = await api
     .post(`${documentsUrl}sign/`, { kind, filename: file.name, content_type: contentType, size: file.size })
     .then((r) => r.data as { key: string; upload_url: string; content_type: string });
   const put = await fetch(signed.upload_url, { method: "PUT", headers: { "Content-Type": signed.content_type }, body: file }).catch(() => null);
   if (!put?.ok) throw new Error("The file didn't reach storage. Check the connection and try again.");
-  return api.post(documentsUrl, { kind, file_key: signed.key, original_name: file.name });
+  return api.post(documentsUrl, { kind, file_key: signed.key, original_name: file.name, ...extra });
 }
 
 /** Uploads (or replaces) one document on a child's application */
@@ -145,6 +145,19 @@ export function useStartPayment(childId: number) {
     mutationFn: (kind) =>
       api.post(`/admission/children/${childId}/payments/${kind}/`).then((r) => startedSchema.parse(r.data)),
     onSuccess: ({ redirect_url }) => window.location.assign(redirect_url),
+  });
+}
+
+export type ReceiptMethod = "upi" | "bank_transfer";
+
+/** Paid by UPI or bank transfer: uploads the receipt. The fee waits for admissions to approve it */
+export function useSendReceipt(childId: number) {
+  const queryClient = useQueryClient();
+
+  return useMutation<Child, Error, { kind: Payment["kind"]; method: ReceiptMethod; reference: string; file: File }>({
+    mutationFn: ({ kind, method, reference, file }) =>
+      uploadDocument(`/admission/children/${childId}/payments/${kind}/receipt/`, kind, file, { method, reference }).then((r) => childSchema.parse(r.data)),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: authKeys.me }),
   });
 }
 
