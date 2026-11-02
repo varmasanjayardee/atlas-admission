@@ -1,8 +1,8 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 
 export const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
-  timeout: 15000,
+  baseURL: "/api",
+  timeout: 15000, 
   headers: { "Content-Type": "application/json" },
 });
 
