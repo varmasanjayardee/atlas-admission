@@ -1,4 +1,5 @@
 import { ApplicationStep } from "./application-step";
+import { AptitudeTestStep } from "./aptitude-test-step";
 import { JoiningStep } from "./joining-step";
 import { OfferStep } from "./offer-step";
 import { AccountReadyStep } from "./account-ready-step";
@@ -22,16 +23,18 @@ export function StepContent(props: StepContentProps) {
     case 4:
       return <VisitDayStep {...props} />;
     case 5:
-      return <ReviewStep {...props} />;
+      return <AptitudeTestStep {...props} />;
     case 6:
-      return <OfferStep {...props} />;
+      return <ReviewStep {...props} />;
     case 7:
-      return <FeeStep {...props} kind="admission" />;
+      return <OfferStep {...props} />;
     case 8:
-      return <JoiningStep {...props} />;
+      return <FeeStep {...props} kind="admission" />;
     case 9:
-      return <AccountSetupStep {...props} />;
+      return <JoiningStep {...props} />;
     case 10:
+      return <AccountSetupStep {...props} />;
+    case 11:
       return <AccountReadyStep {...props} />;
     default:
       return <StepOverview {...props} />;

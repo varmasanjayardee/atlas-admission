@@ -7,8 +7,8 @@ import { cn } from "@/lib/utils";
 import type { Child } from "@/schemas/auth.schema";
 import { StepBody, StepSection, type StepContentProps } from "./step-layout";
 
-const SETUP = 9;
-const READY = 10;
+const SETUP = 10;
+const READY = 11;
 
 export interface Account {
   key: string;
@@ -21,7 +21,7 @@ export interface Account {
   primary?: boolean;
 }
 
-/** Step 9: the Atlas accounts being created, one card per student and per guardian */
+/** Step 10: the Atlas accounts being created, one card per student and per guardian */
 export function AccountSetupStep({ admission }: StepContentProps) {
   const { lead } = admission;
   const child = admission.child!;

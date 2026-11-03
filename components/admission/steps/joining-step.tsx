@@ -43,7 +43,7 @@ const CHECKPOINTS = [
   { days: 14, label: "7 to 14 days", what: "Final instructions" },
 ];
 
-/** Step 8: the before-joining checklist; done when every item that needs the family is */
+/** Step 9: the before-joining checklist; done when every item that needs the family is */
 export function JoiningStep({ admission, state, goNext }: StepContentProps) {
   const child = admission.child!;
   const [today] = useState(() => new Date());
@@ -57,7 +57,7 @@ export function JoiningStep({ admission, state, goNext }: StepContentProps) {
   // Finished uploads show under Documents instead
   const others = items.filter((r) => r.owner !== "parent" || (r.status === "done" && r.action !== "upload"));
   const daysToGo = child.joining_date ? differenceInCalendarDays(parseISO(child.joining_date), today) : null;
-  const following = JOURNEY_STEPS[8];
+  const following = JOURNEY_STEPS[9];
 
   return (
     <>

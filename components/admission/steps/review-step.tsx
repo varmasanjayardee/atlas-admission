@@ -24,7 +24,7 @@ const DECISION = {
     icon: HourglassIcon,
     tone: "bg-amber-50 text-amber-800 ring-amber-200",
     title: (name: string) => `${name}'s application is in review`,
-    body: "The admissions team is looking at the application and the campus visit together. This page updates as soon as there's a decision.",
+    body: "The admissions team is looking at the application, the campus visit and the test together. This page updates as soon as there's a decision.",
   },
   waitlisted: {
     label: "Waiting list",
@@ -68,10 +68,12 @@ function timeline(child: Child): Node[] {
     { title: "Registration fee paid", detail: when(doneAt(2)), state: "done" },
     { title: "Campus visit booked", detail: when(doneAt(3)), state: "done" },
     { title: "Visited the campus", detail: when(doneAt(4)), state: "done" },
+    // Applications reviewed before the test step existed skipped it
+    ...(doneAt(5) ? [{ title: "Took the aptitude test", detail: when(doneAt(5)), state: "done" as const }] : []),
     {
       title: "In review with the admissions team",
       detail: decided
-        ? `Finished ${when(child.reviewed_at ?? doneAt(5)) ?? ""}`
+        ? `Finished ${when(child.reviewed_at ?? doneAt(6)) ?? ""}`
         : child.outcome === "waitlisted"
           ? "On the waiting list"
           : "Happening now",
@@ -85,7 +87,7 @@ function timeline(child: Child): Node[] {
   ];
 }
 
-/** Step 5: where the application stands, as a vertical timeline, and the decision once there is one */
+/** Step 6: where the application stands, as a vertical timeline, and the decision once there is one */
 export function ReviewStep({ admission, goNext }: StepContentProps) {
   const child = admission.child!;
   const name = child.first_name;
@@ -158,7 +160,7 @@ export function ReviewStep({ admission, goNext }: StepContentProps) {
       {child.outcome === "offered" && (
         <StepFooter>
           <Button size="lg" className="h-12 rounded-xl text-base font-semibold" onClick={goNext}>
-            Next: {JOURNEY_STEPS[5].title}
+            Next: {JOURNEY_STEPS[6].title}
           </Button>
         </StepFooter>
       )}

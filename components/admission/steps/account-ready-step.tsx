@@ -8,7 +8,7 @@ import { AccountCard, type Account } from "./account-setup-step";
 
 const capital = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
-/** Step 10: the Atlas accounts exist; show every login and send the family to sign in */
+/** Step 11: the Atlas accounts exist; show every login and send the family to sign in */
 export function AccountReadyStep({ admission }: StepContentProps) {
   const child = admission.child!;
   const accounts = child.atlas_accounts;

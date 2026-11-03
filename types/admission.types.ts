@@ -24,7 +24,7 @@ export type ReviewOutcome = Child["outcome"];
 export interface Admission {
   /** The child's id, or "new" before the parent adds a child */
   studentId: string;
-  /** 1–10, see JOURNEY_STEPS in lib/journey.ts */
+  /** 1–11, see JOURNEY_STEPS in lib/journey.ts */
   currentStep: number;
   enquiryDate: string;
   outcome: ReviewOutcome;

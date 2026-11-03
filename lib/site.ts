@@ -4,7 +4,7 @@ export const site = {
   routes: {
     login: "/login",
   },
-  /** Where families sign in to Atlas once their accounts exist (step 10) */
+  /** Where families sign in to Atlas once their accounts exist (step 11) */
   atlasUrl: process.env.NEXT_PUBLIC_ATLAS_URL ?? "https://app.myatlasedu.ai",
 } as const;
 

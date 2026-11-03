@@ -42,8 +42,8 @@ export function ReuploadBanner({ admission }: { admission: Admission }) {
   const sentBack = admission.child?.documents.filter((d) => d.status === "reupload_requested") ?? [];
   if (!sentBack.length) return null;
 
-  // Step 8 lists every document; before that, the application form holds them
-  const step = admission.currentStep >= 8 ? 8 : 1;
+  // Step 9 lists every document; before that, the application form holds them
+  const step = admission.currentStep >= 9 ? 9 : 1;
 
   return (
     <section role="alert" className="flex items-center gap-4 rounded-2xl border border-destructive/30 bg-destructive/5 p-4">

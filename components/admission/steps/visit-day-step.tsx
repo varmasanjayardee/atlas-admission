@@ -24,7 +24,7 @@ import { StepBody, StepFooter, StepSection, type StepContentProps } from "./step
 
 type Row = { icon: typeof UserIcon; title: React.ReactNode; detail?: React.ReactNode; action?: React.ReactNode };
 
-function Rows({ rows }: { rows: Row[] }) {
+export function Rows({ rows }: { rows: Row[] }) {
   return (
     <ul className="divide-y rounded-xl border">
       {rows.map(({ icon: Icon, title, detail, action }, i) => (
@@ -44,7 +44,7 @@ function Rows({ rows }: { rows: Row[] }) {
 }
 
 // Google Calendar link; nothing personal in it, just the visit
-function calendarUrl(title: string, start: Date, minutes: number, where: string) {
+export function calendarUrl(title: string, start: Date, minutes: number, where: string) {
   const stamp = (d: Date) => d.toISOString().replace(/[-:]|\.\d{3}/g, "");
   const end = new Date(start.getTime() + minutes * 60_000);
   const params = new URLSearchParams({ action: "TEMPLATE", text: title, dates: `${stamp(start)}/${stamp(end)}`, location: where });

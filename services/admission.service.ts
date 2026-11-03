@@ -154,9 +154,9 @@ export type ReceiptMethod = "upi" | "bank_transfer";
 export function useSendReceipt(childId: number) {
   const queryClient = useQueryClient();
 
-  return useMutation<Child, Error, { kind: Payment["kind"]; method: ReceiptMethod; reference: string; file: File }>({
-    mutationFn: ({ kind, method, reference, file }) =>
-      uploadDocument(`/admission/children/${childId}/payments/${kind}/receipt/`, kind, file, { method, reference }).then((r) => childSchema.parse(r.data)),
+  return useMutation<Child, Error, { kind: Payment["kind"]; method: ReceiptMethod; file: File }>({
+    mutationFn: ({ kind, method, file }) =>
+      uploadDocument(`/admission/children/${childId}/payments/${kind}/receipt/`, kind, file, { method }).then((r) => childSchema.parse(r.data)),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: authKeys.me }),
   });
 }
@@ -254,7 +254,7 @@ type OfferAnswer =
   | { action: "extend" }
   | { action: "decline"; reason: (typeof DECLINE_REASONS)[number] };
 
-/** Step 6: accept the offer (-> step 7), extend it once by 7 days, or decline it */
+/** Step 7: accept the offer (-> step 8), extend it once by 7 days, or decline it */
 export function useAnswerOffer(childId: number) {
   const queryClient = useQueryClient();
 
@@ -265,7 +265,7 @@ export function useAnswerOffer(childId: number) {
   });
 }
 
-/** Step 8: the parent confirms a checklist item; the last parent item moves the child to step 9 */
+/** Step 9: the parent confirms a checklist item; the last parent item moves the child to step 10 */
 export function useConfirmRequirement(childId: number) {
   const queryClient = useQueryClient();
 

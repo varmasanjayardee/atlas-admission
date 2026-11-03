@@ -16,7 +16,7 @@ import { StepBody, StepFooter, StepSection, type StepContentProps } from "./step
 const long = (iso: string) => format(parseISO(iso), "EEEE d MMMM yyyy");
 const short = (iso: string) => format(parseISO(iso), "d MMM yyyy");
 
-/** Step 6: the offer letter, its fees, and accept / extend / decline */
+/** Step 7: the offer letter, its fees, and accept / extend / decline */
 export function OfferStep({ admission, goNext }: StepContentProps) {
   const child = admission.child!;
   const fees = useChildFees(child.id);
@@ -161,7 +161,7 @@ export function OfferStep({ admission, goNext }: StepContentProps) {
       <StepFooter>
         {child.offer_accepted_at ? (
           <Button size="lg" className="h-12 rounded-xl text-base font-semibold" onClick={goNext}>
-            Next: {JOURNEY_STEPS[6].title}
+            Next: {JOURNEY_STEPS[7].title}
           </Button>
         ) : open ? (
           <>

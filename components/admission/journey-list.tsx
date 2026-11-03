@@ -103,8 +103,8 @@ function Hero({ admission, step }: { admission: Admission; step: JourneyStep }) 
           {step.title} · Enquiry made on {format(parseISO(admission.enquiryDate), "d MMMM yyyy")}
         </p>
 
-        {/* Ten segments; the part labels sit under their share of them (4, 3, 3) */}
-        <div className="mt-6 grid grid-cols-10 gap-1.5" aria-label={`${step.number - 1} of ${TOTAL_STEPS} steps done`} role="img">
+        {/* One segment per step; the part labels sit under their share of them (5, 3, 3) */}
+        <div className="mt-6 grid grid-cols-11 gap-1.5" aria-label={`${step.number - 1} of ${TOTAL_STEPS} steps done`} role="img">
           {JOURNEY_STEPS.map((s) => {
             const state = getStepState(s.number, admission);
             return (
@@ -115,7 +115,7 @@ function Hero({ admission, step }: { admission: Admission; step: JourneyStep }) 
             );
           })}
         </div>
-        <div className="mt-2 grid grid-cols-10 gap-1.5 text-xs font-medium text-muted-foreground" aria-hidden>
+        <div className="mt-2 grid grid-cols-11 gap-1.5 text-xs font-medium text-muted-foreground" aria-hidden>
           {JOURNEY_PARTS.map((part) => (
             <span key={part.label} style={{ gridColumn: `span ${part.steps.length}` }}>
               {part.label}

@@ -29,7 +29,7 @@ import { StepBody, StepFooter, type StepContentProps } from "./step-layout";
 
 const nextTitle = JOURNEY_STEPS[1].title;
 
-/** Step 1: the ten-section application form. Family sections are shared by every child. */
+/** Step 1: the eleven-section application form. Family sections are shared by every child. */
 export function ApplicationStep({ admission, state, goNext, page }: StepContentProps) {
   const [adding, setAdding] = useState(false);
   const [open, setOpen] = useState<string | null>(null);

@@ -22,8 +22,11 @@ const COPY: Record<Kind, { title: string; purpose: (name: string) => string }> =
   admission: { title: "Admission fee", purpose: (name) => `Confirms ${name}'s place` },
 };
 
-/** Steps 2 and 7: a journey fee from the fee plan, paid online through ICICI, or by UPI or
+/** Steps 2 and 8: a journey fee from the fee plan, paid online through ICICI, or by UPI or
  * bank transfer with a receipt that admissions approves before the step completes */
+// ponytail: online (ICICI) payment is switched off for families for now; flip to false to offer it again
+const ONLINE_LOCKED = true;
+
 export function FeeStep({ admission, step, state, goNext, kind }: StepContentProps & { kind: Kind }) {
   const child = admission.child!;
   const fees = useChildFees(child.id);
@@ -55,7 +58,7 @@ export function FeeStep({ admission, step, state, goNext, kind }: StepContentPro
   const registrationPaid = child.payments.find((p) => p.kind === "registration" && p.status === "success");
   const following = JOURNEY_STEPS[step.number];
   // Two ways to pay: manual (bank transfer or UPI, then the receipt) first; online opens if they last tried it
-  const [tab, setTab] = useState<"manual" | "online">(latest && latest.gateway !== "receipt" ? "online" : "manual");
+  const [tab, setTab] = useState<"manual" | "online">(!ONLINE_LOCKED && latest && latest.gateway !== "receipt" ? "online" : "manual");
   const choosing = !paid && !checking && !confirming && !!group?.items.length;
 
   const chip = paid
@@ -149,7 +152,7 @@ export function FeeStep({ admission, step, state, goNext, kind }: StepContentPro
               {latest.gateway === "receipt" ? (
                 <span>
                   <span className="font-semibold">Admissions couldn&apos;t accept your receipt.</span>{" "}
-                  <span className="text-muted-foreground">{latest.failure_reason} Pay online, or send the right receipt.</span>
+                  <span className="text-muted-foreground">{latest.failure_reason} {ONLINE_LOCKED ? "Send" : "Pay online, or send"} the right receipt.</span>
                 </span>
               ) : (
                 <span>
@@ -198,9 +201,12 @@ export function FeeStep({ admission, step, state, goNext, kind }: StepContentPro
                   id={`pay-tab-${t}`}
                   aria-selected={tab === t}
                   aria-controls={`pay-panel-${t}`}
+                  disabled={t === "online" && ONLINE_LOCKED}
+                  title={t === "online" && ONLINE_LOCKED ? "Online payment isn't available yet" : undefined}
                   onClick={() => setTab(t)}
-                  className="h-10 rounded-lg text-sm font-medium text-muted-foreground transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50 aria-selected:bg-card aria-selected:text-foreground aria-selected:shadow-sm"
+                  className="flex h-10 items-center justify-center gap-1.5 rounded-lg text-sm font-medium text-muted-foreground transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50 aria-selected:bg-card aria-selected:text-foreground aria-selected:shadow-sm"
                 >
+                  {t === "online" && ONLINE_LOCKED && <LockIcon className="size-3.5" />}
                   {t === "manual" ? "Manual payment" : "Online payment"}
                 </button>
               ))}
@@ -233,37 +239,40 @@ export function FeeStep({ admission, step, state, goNext, kind }: StepContentPro
         )}
       </StepBody>
 
-      <StepFooter>
-        {state === "done" && following ? (
-          <Button size="lg" className="h-12 rounded-xl text-base font-semibold" onClick={goNext}>
-            Next: {following.title}
-          </Button>
-        ) : (
-          !paid &&
-          // Manual payment sends its receipt from its own form
-          !(choosing && tab === "manual") && (
-            <>
-              {/* The online tab already says this */}
-              {!choosing && (
-                <p className="flex items-center justify-center gap-1.5 text-center text-xs text-muted-foreground">
-                  <LockIcon className="size-3" />
-                  You&apos;ll pay on ICICI Bank&apos;s secure page, then come back here
-                </p>
-              )}
-              <Button
-                size="lg"
-                className="h-12 rounded-xl text-base font-semibold"
-                disabled={!group?.items.length || start.isPending || start.isSuccess || refresh.isPending || confirming || !!checking}
-                onClick={() => start.mutate(kind)}
-              >
-                {(start.isPending || start.isSuccess) && <Loader2Icon className="animate-spin" />}
-                {group ? `Pay ${formatCurrency(group.total)} online` : `Pay ${copy.title.toLowerCase()} online`}
-              </Button>
-              {start.isError && <p className="text-center text-sm text-destructive">{start.error.message}</p>}
-            </>
-          )
-        )}
-      </StepFooter>
+      {/* With online locked the footer only holds "Next"; manual payment sends from its own form */}
+      {((state === "done" && following) || !ONLINE_LOCKED) && (
+        <StepFooter>
+          {state === "done" && following ? (
+            <Button size="lg" className="h-12 rounded-xl text-base font-semibold" onClick={goNext}>
+              Next: {following.title}
+            </Button>
+          ) : (
+            !paid &&
+            // Manual payment sends its receipt from its own form
+            !(choosing && tab === "manual") && (
+              <>
+                {/* The online tab already says this */}
+                {!choosing && (
+                  <p className="flex items-center justify-center gap-1.5 text-center text-xs text-muted-foreground">
+                    <LockIcon className="size-3" />
+                    You&apos;ll pay on ICICI Bank&apos;s secure page, then come back here
+                  </p>
+                )}
+                <Button
+                  size="lg"
+                  className="h-12 rounded-xl text-base font-semibold"
+                  disabled={!group?.items.length || start.isPending || start.isSuccess || refresh.isPending || confirming || !!checking}
+                  onClick={() => start.mutate(kind)}
+                >
+                  {(start.isPending || start.isSuccess) && <Loader2Icon className="animate-spin" />}
+                  {group ? `Pay ${formatCurrency(group.total)} online` : `Pay ${copy.title.toLowerCase()} online`}
+                </Button>
+                {start.isError && <p className="text-center text-sm text-destructive">{start.error.message}</p>}
+              </>
+            )
+          )}
+        </StepFooter>
+      )}
     </>
   );
 }
@@ -277,10 +286,8 @@ const RECEIPT_METHODS: { value: ReceiptMethod; label: string }[] = [
 function ManualPayment({ childId, kind, bank }: { childId: number; kind: Kind; bank: ChildFees["bank"] }) {
   const send = useSendReceipt(childId);
   const [method, setMethod] = useState<ReceiptMethod>("bank_transfer");
-  const [reference, setReference] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState("");
-  const field = "h-11 w-full rounded-lg border bg-transparent px-3 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm";
   const copy = (text: string) => navigator.clipboard.writeText(text).then(() => toast.success("Copied"));
 
   return (
@@ -316,7 +323,7 @@ function ManualPayment({ childId, kind, bank }: { childId: number; kind: Kind; b
         </section>
       ) : (
         <p className="rounded-xl bg-muted p-4 text-sm text-muted-foreground">
-          The school&apos;s bank details aren&apos;t set up here yet. Ask your counsellor for them, or pay online.
+          The school&apos;s bank details aren&apos;t set up here yet. Ask your counsellor for them.
         </p>
       )}
 
@@ -325,11 +332,10 @@ function ManualPayment({ childId, kind, bank }: { childId: number; kind: Kind; b
         className="space-y-4 rounded-xl border p-4"
         onSubmit={(e) => {
           e.preventDefault();
-          if (!reference.trim()) return setError("Add the UPI or bank transaction reference.");
           if (!file) return setError("Choose the receipt: a screenshot, photo or PDF.");
           if (file.size > 10 * 1024 * 1024) return setError("The file is larger than 10 MB.");
           setError("");
-          send.mutate({ kind, method, reference: reference.trim(), file }, { onError: (err) => setError(err.message) });
+          send.mutate({ kind, method, file }, { onError: (err) => setError(err.message) });
         }}
       >
         <h4 id="receipt-heading" className="text-sm font-semibold">
@@ -350,10 +356,6 @@ function ManualPayment({ childId, kind, bank }: { childId: number; kind: Kind; b
             </button>
           ))}
         </div>
-        <label className="block text-sm">
-          <span className="font-medium">{method === "upi" ? "UPI transaction ID" : "Bank reference (UTR)"}</span>
-          <input className={cn(field, "mt-1.5")} value={reference} onChange={(e) => setReference(e.target.value)} autoComplete="off" />
-        </label>
         <label className="block text-sm">
           <span className="font-medium">Receipt</span>
           <span className="block text-xs text-muted-foreground">A screenshot, photo or PDF, up to 10 MB</span>

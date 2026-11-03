@@ -60,7 +60,7 @@ const feeItemSchema = z.object({
 
 const feeGroupSchema = z.object({ items: z.array(feeItemSchema), total: z.string() });
 
-/** GET children/<id>/fees/: the child's registration (step 2) and admission (step 7) fee plans */
+/** GET children/<id>/fees/: the child's registration (step 2) and admission (step 8) fee plans */
 export const childFeesSchema = z.object({
   plan: z.object({ campus: z.string(), academic_year: z.string(), grade: z.string(), terms_per_year: z.number() }),
   registration: feeGroupSchema,
@@ -92,7 +92,7 @@ export const slotSchema = z.object({
 
 export type Slot = z.infer<typeof slotSchema>;
 
-/** A before-joining checklist item (step 8) */
+/** A before-joining checklist item (step 9) */
 export const requirementSchema = z.object({
   id: z.number(),
   title: z.string(),
@@ -168,11 +168,26 @@ export const childSchema = z.object({
   heard_from: text,
   school_priorities: text,
   notes_for_counsellor: text,
+  // Questions for parents
+  reason_to_join: text,
+  family_note: text,
+  parent_works_in_school: z.boolean(),
+  parent_school_details: text,
+  father_work: text,
+  mother_work: text,
+  consent_programs: z.boolean(),
+  confirm_workshops: z.boolean(),
+  standardized_test: text,
+  disciplinary_action: text,
   // Declarations
   declared_true: z.boolean(),
   consent_data: z.boolean(),
   consent_photo: z.boolean(),
   signature_name: text,
+  // Aptitude test (step 5), set by the counsellor
+  aptitude_test_at: z.string().nullable(),
+  aptitude_test_mode: z.enum(["campus", "online", ""]),
+  aptitude_test_link: text,
   // Journey
   documents: z.array(documentSchema),
   /** Every attempt, newest first; a fee is paid once one is "success" */
@@ -180,17 +195,17 @@ export const childSchema = z.object({
   /** The live visit booking (steps 3–4), if any */
   visit: visitSchema.nullable(),
   reference: text,
-  /** 1–10, see JOURNEY_STEPS in lib/journey.ts; 11 once the journey is finished */
+  /** 1–11, see JOURNEY_STEPS in lib/journey.ts; 12 once the journey is finished */
   current_step: z.number(),
   /**
-   * Step 5 review: pending = in review, waitlisted, offered = accepted, rejected, not_offered.
-   * Step 6 answer: declined, or withdrawn when the offer expired.
+   * Step 6 review: pending = in review, waitlisted, offered = accepted, rejected, not_offered.
+   * Step 7 answer: declined, or withdrawn when the offer expired.
    */
   outcome: z.enum(["pending", "waitlisted", "offered", "rejected", "not_offered", "declined", "withdrawn"]),
   /** The counsellor's message with the decision */
   review_note: z.string(),
   reviewed_at: z.string().nullable(),
-  // The offer (step 6): open 7 days from offer_sent_at, extendable once by 7
+  // The offer (step 7): open 7 days from offer_sent_at, extendable once by 7
   offer_sent_at: z.string().nullable(),
   offer_expires_at: z.string().nullable(),
   offer_extended_at: z.string().nullable(),
@@ -200,7 +215,7 @@ export const childSchema = z.object({
   /** First day at school, set by admissions */
   joining_date: z.string().nullable(),
   requirements: z.array(requirementSchema),
-  /** Created by admissions in step 9; logins only, never passwords */
+  /** Created by admissions in step 10; logins only, never passwords */
   atlas_accounts: z
     .object({
       created_at: z.string().nullable(),

@@ -8,6 +8,7 @@ import {
   HourglassIcon,
   KeyRoundIcon,
   MapPinIcon,
+  PencilLineIcon,
   UserCogIcon,
   WalletIcon,
 } from "lucide-react";
@@ -27,9 +28,9 @@ export interface JourneyStep {
 }
 
 export const JOURNEY_PARTS = [
-  { label: "Visit", steps: [1, 2, 3, 4] },
-  { label: "Offer", steps: [5, 6, 7] },
-  { label: "Joining", steps: [8, 9, 10] },
+  { label: "Visit", steps: [1, 2, 3, 4, 5] },
+  { label: "Offer", steps: [6, 7, 8] },
+  { label: "Joining", steps: [9, 10, 11] },
 ] as const;
 
 // Same numbering as AdmissionStep in keyed-backend admission/models.py
@@ -72,15 +73,24 @@ export const JOURNEY_STEPS: JourneyStep[] = [
   },
   {
     number: 5,
-    title: "Under review",
-    description: "The admissions team reviews the visit and shares the outcome",
-    icon: HourglassIcon,
-    action: { title: "Your application is under review", cta: "Status" },
-    details: ["Nothing is needed from you at this step.", "The admissions team reviews your application and your visit.", "You will see the outcome here."],
-    needs: ["Nothing. We will let you know here."],
+    title: "Aptitude test",
+    description: "Your counsellor sets a time for your child's test, at the school or on a video call",
+    icon: PencilLineIcon,
+    action: { title: "Your child's aptitude test", cta: "Test details" },
+    details: ["Nothing is needed from you to set it up.", "Your admission counsellor picks the date and time, at the school or online on a video call.", "The counsellor gives the test, then the application moves to review."],
+    needs: ["For an online test, a laptop or tablet with a camera", "For a test at the school, arrive 10 minutes early"],
   },
   {
     number: 6,
+    title: "Under review",
+    description: "The admissions team reviews the visit and the test, and shares the outcome",
+    icon: HourglassIcon,
+    action: { title: "Your application is under review", cta: "Status" },
+    details: ["Nothing is needed from you at this step.", "The admissions team reviews your application, your visit and the test.", "You will see the outcome here."],
+    needs: ["Nothing. We will let you know here."],
+  },
+  {
+    number: 7,
     title: "Accept offer",
     description: "Accept within 7 days, with one 7-day extension if you need it",
     icon: BadgeCheckIcon,
@@ -89,7 +99,7 @@ export const JOURNEY_STEPS: JourneyStep[] = [
     needs: ["Time to read the offer and its fees"],
   },
   {
-    number: 7,
+    number: 8,
     title: "Admission fee",
     description: "Pay the admission fee and download your invoice",
     icon: CreditCardIcon,
@@ -98,7 +108,7 @@ export const JOURNEY_STEPS: JourneyStep[] = [
     needs: ["UPI, a debit or credit card, or net banking", "Your phone, for the bank's one-time password"],
   },
   {
-    number: 8,
+    number: 9,
     title: "Joining form",
     description: "Upload the last documents and confirm a few things; admissions confirms the joining date",
     icon: ClipboardListIcon,
@@ -107,7 +117,7 @@ export const JOURNEY_STEPS: JourneyStep[] = [
     needs: ["The transfer certificate from your child's current school, if they have one", "Anything admissions adds to your checklist"],
   },
   {
-    number: 9,
+    number: 10,
     title: "Atlas account setup",
     description: "The school assigns your child's grade and section",
     icon: UserCogIcon,
@@ -116,7 +126,7 @@ export const JOURNEY_STEPS: JourneyStep[] = [
     needs: ["Nothing. The school sets this up."],
   },
   {
-    number: 10,
+    number: 11,
     title: "Atlas account ready",
     description: "Login details for parent and student",
     icon: KeyRoundIcon,
