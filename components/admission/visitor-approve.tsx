@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { format, parseISO } from "date-fns";
-import { CircleAlertIcon, CircleCheckIcon, EarIcon, KeyRoundIcon, Loader2Icon, ScanLineIcon } from "lucide-react";
+import { CircleAlertIcon, CircleCheckIcon, KeyRoundIcon, Loader2Icon, ScanLineIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -175,13 +175,6 @@ function VisitCard({
           </div>
         ))}
       </dl>
-
-      {visit.hearing_aid && (
-        <p className="flex items-center gap-2 text-sm text-muted-foreground">
-          <EarIcon className="size-4" />
-          Someone in this family uses a hearing aid.
-        </p>
-      )}
 
       {problem && !attended && (
         <p className="text-sm text-destructive" role="alert">

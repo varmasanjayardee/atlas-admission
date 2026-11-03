@@ -125,9 +125,6 @@ export function VisitDayStep({ admission, state, goNext }: StepContentProps) {
               ...(museum
                 ? [{ icon: HeadphonesIcon, title: "Headphones and a short briefing before the tour", detail: "Your counsellor accompanies you throughout." }]
                 : []),
-              ...(visit.hearing_aid
-                ? [{ icon: CircleCheckIcon, title: "We know someone uses a hearing aid", detail: "Your counsellor will plan the tour around it." }]
-                : []),
             ]}
           />
         </StepSection>

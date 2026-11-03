@@ -182,10 +182,7 @@ export function useChildSlots(childId: number, enabled = true) {
   });
 }
 
-type VisitChange =
-  | { action: "book"; slot: number; hearing_aid: boolean }
-  | { action: "reschedule"; slot: number; hearing_aid: boolean }
-  | { action: "cancel" };
+type VisitChange = { action: "book" | "reschedule"; slot: number } | { action: "cancel" };
 
 /** Book (step 3 -> 4), reschedule, or cancel (back to step 3) the child's campus visit */
 export function useChangeVisit(childId: number) {
@@ -197,8 +194,8 @@ export function useChangeVisit(childId: number) {
       (change.action === "cancel"
         ? api.delete(url)
         : change.action === "book"
-          ? api.post(url, { slot: change.slot, hearing_aid: change.hearing_aid })
-          : api.patch(url, { slot: change.slot, hearing_aid: change.hearing_aid })
+          ? api.post(url, { slot: change.slot })
+          : api.patch(url, { slot: change.slot })
       ).then((r) => childSchema.parse(r.data)),
     // Refresh places either way: a 409 means the list is stale
     onSettled: () =>
@@ -237,7 +234,6 @@ export const gateVisitSchema = z.object({
   gate: z.string(),
   visit_type: z.string(),
   staff: z.array(z.string()),
-  hearing_aid: z.boolean(),
   is_today: z.boolean(),
 });
 

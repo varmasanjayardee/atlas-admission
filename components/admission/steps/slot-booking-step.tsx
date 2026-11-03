@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { format, parseISO } from "date-fns";
-import { CircleAlertIcon, CircleCheckIcon, HeadphonesIcon, Loader2Icon, MapPinIcon, UsersIcon } from "lucide-react";
+import { CircleAlertIcon, CircleCheckIcon, Loader2Icon, MapPinIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { GRADE_STAGE_LABEL } from "@/lib/application-form";
@@ -11,29 +11,11 @@ import type { Slot, VisitBooking } from "@/schemas/auth.schema";
 import { useChangeVisit, useChildSlots } from "@/services/admission.service";
 import { StepBody, StepFooter, StepSection, type StepContentProps } from "./step-layout";
 
-type VisitType = Slot["visit_type"];
-
-const VISIT_TYPES: { id: VisitType; name: string; line: string; tags: string[]; icon: typeof UsersIcon }[] = [
-  {
-    id: "counsellor",
-    name: "Admission Counsellor Slot",
-    line: "An admission counsellor walks with you through the campus.",
-    tags: ["Questions as you go", "Best with a hearing aid"],
-    icon: UsersIcon,
-  },
-  {
-    id: "museum",
-    name: "Museum Guide Slot",
-    line: "Audio-guided with headphones. Your counsellor accompanies you throughout.",
-    tags: ["Headphones provided", "Your own pace"],
-    icon: HeadphonesIcon,
-  },
-];
-
 const time = (slot: Slot) => slot.start_time.slice(0, 5);
 const day = (iso: string) => format(parseISO(iso), "EEE d MMM");
 
-/** Step 3: pick a visit type and a time; once booked, reschedule or cancel until the visit starts */
+/** Step 3: pick a time for a visit with an admission counsellor (the only kind families book), and say if
+ * nothing else to choose; once booked, reschedule or cancel until the visit starts */
 export function SlotBookingStep({ admission, goNext }: StepContentProps) {
   const child = admission.child!;
   const [changing, setChanging] = useState(false);
@@ -72,23 +54,22 @@ function SlotPicker({
 }) {
   const slots = useChildSlots(childId);
   const change = useChangeVisit(childId);
-  const [type, setType] = useState<VisitType | null>(current?.slot.visit_type ?? null);
-  const [hearingAid, setHearingAid] = useState(current?.hearing_aid ?? false);
   const [date, setDate] = useState<string | null>(null);
   const [slotId, setSlotId] = useState<number | null>(null);
   const [filled, setFilled] = useState(false);
 
-  const all = slots.data ?? [];
+  // The server only offers counsellor slots; filtered here too in case an older booking was another type
+  const all = (slots.data ?? []).filter((s) => s.visit_type === "counsellor");
   const dates = [...new Set(all.map((s) => s.date))];
   const shownDate = date ?? dates[0];
-  const times = all.filter((s) => s.date === shownDate && (!type || s.visit_type === type));
+  const times = all.filter((s) => s.date === shownDate);
   const chosen = all.find((s) => s.id === slotId);
   const stage = GRADE_STAGE_LABEL[grade];
 
   const confirm = () =>
     chosen &&
     change.mutate(
-      { action: current ? "reschedule" : "book", slot: chosen.id, hearing_aid: hearingAid },
+      { action: current ? "reschedule" : "book", slot: chosen.id },
       {
         onSuccess: () => {
           toast.success(current ? "Visit moved" : "Visit confirmed");
@@ -130,62 +111,6 @@ function SlotPicker({
           </div>
         )}
 
-        <StepSection title="Choose how you visit">
-          <div className="grid gap-3 sm:grid-cols-2">
-            {VISIT_TYPES.map((v) => {
-              const Icon = v.icon;
-              return (
-                <button
-                  key={v.id}
-                  type="button"
-                  aria-pressed={type === v.id}
-                  onClick={() => {
-                    setType(type === v.id ? null : v.id);
-                    setSlotId(null);
-                  }}
-                  className="flex flex-col gap-2 rounded-xl border p-4 text-left outline-none transition-colors hover:bg-muted/50 focus-visible:ring-3 focus-visible:ring-ring/50 aria-pressed:border-primary aria-pressed:bg-primary/5 aria-pressed:ring-1 aria-pressed:ring-primary"
-                >
-                  <span className="flex items-center justify-between">
-                    <span className="flex size-9 items-center justify-center rounded-full bg-primary/10 text-primary">
-                      <Icon className="size-4" />
-                    </span>
-                    {type === v.id && <CircleCheckIcon className="size-5 text-primary" />}
-                  </span>
-                  <span className="font-semibold">{v.name}</span>
-                  <span className="text-sm text-muted-foreground">{v.line}</span>
-                  <span className="flex flex-wrap gap-1.5">
-                    {v.tags.map((tag) => (
-                      <span key={tag} className="rounded-full bg-muted px-2 py-0.5 text-xs">
-                        {tag}
-                      </span>
-                    ))}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-
-          <label className="mt-3 flex items-center justify-between gap-4 rounded-xl border p-4">
-            <span className="text-sm">
-              <span className="font-medium">Someone attending uses a hearing aid</span>
-              <span className="block text-muted-foreground">
-                {hearingAid
-                  ? "We suggest the Admission Counsellor Slot, as headphones may not suit hearing-aid users."
-                  : "Tell us and we will suggest the best option."}
-              </span>
-            </span>
-            <input
-              type="checkbox"
-              className="size-5 shrink-0 accent-[var(--primary)]"
-              checked={hearingAid}
-              onChange={(e) => {
-                setHearingAid(e.target.checked);
-                if (e.target.checked && !type) setType("counsellor");
-              }}
-            />
-          </label>
-        </StepSection>
-
         <StepSection title="Date">
           {slots.isLoading ? (
             <div className="h-16 animate-pulse rounded-xl bg-muted" />
@@ -216,9 +141,9 @@ function SlotPicker({
         </StepSection>
 
         {!!dates.length && (
-          <StepSection title={type ? "Times" : "Times · choose a visit type to filter"}>
+          <StepSection title="Times">
             {!times.length ? (
-              <p className="rounded-xl bg-muted p-4 text-sm text-muted-foreground">No slots of this type on this day. Try another date.</p>
+              <p className="rounded-xl bg-muted p-4 text-sm text-muted-foreground">No slots on this day. Try another date.</p>
             ) : (
               <ul className="space-y-2">
                 {times.map((s) => {
@@ -231,7 +156,6 @@ function SlotPicker({
                         aria-pressed={slotId === s.id}
                         onClick={() => {
                           setSlotId(s.id);
-                          setType(type ?? s.visit_type);
                           setFilled(false);
                         }}
                         className="flex w-full items-center gap-4 rounded-xl border px-4 py-3 text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50 aria-pressed:border-primary aria-pressed:bg-primary/5 aria-pressed:ring-1 aria-pressed:ring-primary"
@@ -327,7 +251,6 @@ function BookedVisit({
               </div>
             ))}
           </dl>
-          {visit.hearing_aid && <p className="mt-2 text-xs text-muted-foreground">We&apos;ve noted that someone attending uses a hearing aid.</p>}
         </StepSection>
 
         {visit.status === "attended" ? null : confirmCancel ? (

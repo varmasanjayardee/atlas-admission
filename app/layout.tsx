@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Geist_Mono, Inter } from "next/font/google";
+import Script from "next/script";
 import { Providers } from "@/components/providers";
 import "./globals.css";
 
@@ -39,6 +40,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col">
         <Providers>{children}</Providers>
+        {/* Umami analytics (cookieless page views) */}
+        <Script src="https://cloud.umami.is/script.js" data-website-id="0926c78e-a7f4-4ad3-ab81-e34579262a9b" strategy="afterInteractive" />
       </body>
     </html>
   );

@@ -65,6 +65,10 @@ export const childFeesSchema = z.object({
   plan: z.object({ campus: z.string(), academic_year: z.string(), grade: z.string(), terms_per_year: z.number() }),
   registration: feeGroupSchema,
   admission: feeGroupSchema,
+  /** The campus's account for manual payments; null until the school sets it up */
+  bank: z
+    .object({ account_name: z.string(), account_number: z.string(), bank_name: z.string(), branch: z.string(), ifsc: z.string() })
+    .nullable(),
 });
 
 export type ChildFees = z.infer<typeof childFeesSchema>;
@@ -117,7 +121,6 @@ export const visitSchema = z.object({
   campus_image: z.string().nullable(),
   /** QR of the gate pass code, as an SVG data URI */
   gate_pass_qr: z.string(),
-  hearing_aid: z.boolean(),
   gate_pass_code: z.string(),
   rescheduled_count: z.number(),
 });

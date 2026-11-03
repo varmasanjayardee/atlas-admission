@@ -223,7 +223,8 @@ function Overview({
             <p className="text-center text-xs text-muted-foreground">Answers can&apos;t be changed after you submit.</p>
             <Button
               size="lg"
-              className="h-12 rounded-xl text-base font-semibold"
+              // The long "complete the fields" label wraps in the narrow section list instead of overflowing
+              className="h-auto! min-h-12 rounded-xl py-3 text-base leading-snug font-semibold whitespace-normal!"
               disabled={!child || progress < 100 || submit.isPending}
               onClick={onSubmit}
             >

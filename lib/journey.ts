@@ -55,11 +55,11 @@ export const JOURNEY_STEPS: JourneyStep[] = [
   {
     number: 3,
     title: "Slot booking",
-    description: "Tell us if headphones are needed, pick a visit slot and get your gate pass",
+    description: "Pick a visit slot with an admission counsellor and get your gate pass",
     icon: CalendarClockIcon,
     action: { title: "Book your campus visit", cta: "Book" },
-    details: ["Tell us if a hearing aid or headphones are needed.", "Pick a visit slot on your campus.", "Your gate pass is issued as soon as you book. You can reschedule or cancel here."],
-    needs: ["A few dates that suit your family", "Whether your child needs a hearing aid or headphones on the visit"],
+    details: ["Pick a visit slot on your campus.", "Your gate pass is issued as soon as you book. You can reschedule or cancel here."],
+    needs: ["A few dates that suit your family"],
   },
   {
     number: 4,
