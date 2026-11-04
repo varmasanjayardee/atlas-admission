@@ -384,10 +384,15 @@ function SectionEditor({
               onChange={(value) => {
                 input.onChange(value);
                 // A new campus has its own academic years
-                if (prefix === "values" && field.key === "campus") setValue("values.academic_year", null);
+                if (prefix === "values" && field.key === "campus") {
+                  setValue("values.academic_year", null);
+                  // ...and admits its own grades
+                  if (!campuses.find((c) => c.id === value)?.grades.some((g) => g.value === values?.grade)) setValue("values.grade", "");
+                }
               }}
               campuses={campuses}
               years={campuses.find((c) => c.id === values?.campus)?.academic_years ?? []}
+              grades={campuses.find((c) => c.id === values?.campus)?.grades ?? []}
               error={fieldState.error?.message}
               disabled={readOnly}
             />

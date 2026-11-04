@@ -55,10 +55,15 @@ export function useAdmission(studentId: string | undefined) {
 }
 
 const campusSchema = z.array(
-  z.object({ id: z.number(), name: z.string(), academic_years: z.array(z.object({ id: z.number(), name: z.string() })) })
+  z.object({
+    id: z.number(),
+    name: z.string(),
+    academic_years: z.array(z.object({ id: z.number(), name: z.string() })),
+    grades: z.array(z.object({ value: z.string(), label: z.string() })),
+  })
 );
 
-/** Campus choices for the application form, each with its open academic years */
+/** Campus choices for the application form, each with its open academic years and the grades it admits */
 export function useCampuses() {
   return useQuery({
     queryKey: ["campuses"],

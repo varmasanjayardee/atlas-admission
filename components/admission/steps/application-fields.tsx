@@ -22,13 +22,14 @@ interface FieldInputProps {
   campuses: { id: number; name: string }[];
   /** The chosen campus's academic years, for options: "academic_years" */
   years: { id: number; name: string }[];
+  /** The chosen campus's grades, for options: "grades" */
+  grades: { value: string; label: string }[];
   error?: string;
   disabled?: boolean;
 }
 
 /** One application form answer, drawn from its config in lib/application-form.ts */
-export function FieldInput({ field, value, onChange, campuses, years, error, disabled }: FieldInputProps) {
-  console.log("FieldInput", { field, value, error, disabled });
+export function FieldInput({ field, value, onChange, campuses, years, grades, error, disabled }: FieldInputProps) {
   const id = useId();
   const byId = field.options === "campuses" || field.options === "academic_years";
   const options =
@@ -36,7 +37,9 @@ export function FieldInput({ field, value, onChange, campuses, years, error, dis
       ? campuses.map((c) => ({ value: String(c.id), label: c.name }))
       : field.options === "academic_years"
         ? years.map((y) => ({ value: String(y.id), label: y.name }))
-        : (field.options ?? []).map(optionOf);
+        : field.options === "grades"
+          ? grades
+          : (field.options ?? []).map(optionOf);
   const label = (
     <>
       {field.label}
@@ -75,7 +78,28 @@ export function FieldInput({ field, value, onChange, campuses, years, error, dis
     <Field data-invalid={!!error}>
       <FieldLabel htmlFor={id}>{label}</FieldLabel>
 
-      {field.type === "select" ? (
+      {field.type === "select" && field.search ? (
+        // Native search: typing filters the list; anything that isn't an option is dropped on leaving
+        <>
+          <Input
+            id={id}
+            list={`${id}-list`}
+            className="h-11 rounded-lg"
+            placeholder="Type to search"
+            aria-invalid={!!error}
+            disabled={disabled}
+            autoComplete="off"
+            value={String(value ?? "")}
+            onChange={(e) => onChange(e.target.value)}
+            onBlur={(e) => onChange(options.find((o) => o.value.toLowerCase() === e.target.value.trim().toLowerCase())?.value ?? "")}
+          />
+          <datalist id={`${id}-list`}>
+            {options.map((o) => (
+              <option key={o.value} value={o.value} />
+            ))}
+          </datalist>
+        </>
+      ) : field.type === "select" ? (
         <select
           id={id}
           className={control}
@@ -110,20 +134,7 @@ export function FieldInput({ field, value, onChange, campuses, years, error, dis
           ))}
         </div>
       ) : field.type === "chips" ? (
-        <div role="group" aria-label={field.label} className="flex flex-wrap gap-2">
-          {options.map((o) => {
-            const list = (value as string[] | undefined) ?? [];
-            const on = list.includes(o.value);
-            // "None" can't sit alongside anything else
-            const toggle = () =>
-              onChange(on ? list.filter((v) => v !== o.value) : o.value === "None" ? ["None"] : [...list.filter((v) => v !== "None"), o.value]);
-            return (
-              <button key={o.value} type="button" aria-pressed={on} disabled={disabled} onClick={toggle} className={pill}>
-                {o.label}
-              </button>
-            );
-          })}
-        </div>
+        <ChipsInput field={field} options={options} value={value} onChange={onChange} disabled={disabled} />
       ) : (
         <Input
           id={id}
@@ -140,6 +151,49 @@ export function FieldInput({ field, value, onChange, campuses, years, error, dis
       {field.help && <FieldDescription>{field.help}</FieldDescription>}
       <FieldError>{error}</FieldError>
     </Field>
+  );
+}
+
+/** Multi-select pills; with `addable`, typed-in values join the list as their own pills */
+function ChipsInput({ field, options, value, onChange, disabled }: { field: FormField; options: { value: string; label: string }[]; value: unknown; onChange: (value: unknown) => void; disabled?: boolean }) {
+  const list = (value as string[] | undefined) ?? [];
+  const typed = list.filter((v) => !options.some((o) => o.value === v)).map((v) => ({ value: v, label: v }));
+  const add = (input: HTMLInputElement) => {
+    const v = input.value.trim();
+    input.value = "";
+    if (v && !list.some((x) => x.toLowerCase() === v.toLowerCase())) onChange([...list.filter((x) => x !== "None"), v]);
+  };
+
+  return (
+    <div className="space-y-2">
+      <div role="group" aria-label={field.label} className="flex flex-wrap gap-2">
+        {[...options, ...typed].map((o) => {
+          const on = list.includes(o.value);
+          // "None" can't sit alongside anything else
+          const toggle = () =>
+            onChange(on ? list.filter((v) => v !== o.value) : o.value === "None" ? ["None"] : [...list.filter((v) => v !== "None"), o.value]);
+          return (
+            <button key={o.value} type="button" aria-pressed={on} disabled={disabled} onClick={toggle} className={pill}>
+              {o.label}
+            </button>
+          );
+        })}
+      </div>
+      {field.addable && !disabled && list.length < 20 && (
+        <Input
+          aria-label={`Add to ${field.label.toLowerCase()}`}
+          placeholder="Type another and press Enter"
+          maxLength={50}
+          className="h-11 rounded-lg"
+          onKeyDown={(e) => {
+            if (e.key !== "Enter") return;
+            e.preventDefault();
+            add(e.currentTarget);
+          }}
+          onBlur={(e) => add(e.currentTarget)}
+        />
+      )}
+    </div>
   );
 }
 
