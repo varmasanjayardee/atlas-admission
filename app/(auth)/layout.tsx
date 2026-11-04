@@ -20,8 +20,8 @@ export default function AuthLayout({ children }: LayoutProps<"/">) {
               <LockIcon className="size-4" />
               256-bit encrypted official admissions process
             </span>
-            <a href={`mailto:${site.helpEmail}`} className="hover:underline">
-              Help Desk: {site.helpEmail}
+            <a href={`tel:${site.helpLine}`} className="hover:underline">
+              Help line: {site.helpLine}
             </a>
           </footer>
         </div>

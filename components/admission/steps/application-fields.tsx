@@ -1,19 +1,35 @@
 "use client";
 
 import { useId } from "react";
-import { CameraIcon, CircleCheckIcon, Loader2Icon } from "lucide-react";
+import { CameraIcon, CircleCheckIcon, Loader2Icon, XIcon } from "lucide-react";
 import { toast } from "sonner";
-import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+} from "@/components/ui/combobox";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import type { FormField, Option } from "@/lib/application-form";
 import { cn } from "@/lib/utils";
 import type { Child } from "@/schemas/auth.schema";
 import { useUploadDocument } from "@/services/admission.service";
 
-const optionOf = (o: Option) => (typeof o === "string" ? { value: o, label: o } : o);
+const optionOf = (o: Option) =>
+  typeof o === "string" ? { value: o, label: o } : o;
 
-const control = "h-11 w-full rounded-lg border bg-transparent px-3 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-60 aria-invalid:border-destructive md:text-sm";
-const pill = "rounded-full border px-3.5 py-2 text-sm font-medium transition-colors disabled:opacity-60 aria-pressed:border-primary aria-pressed:bg-primary aria-pressed:text-primary-foreground";
+const control =
+  "h-11 w-full rounded-lg border bg-transparent px-3 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-60 aria-invalid:border-destructive md:text-sm";
+const pill =
+  "rounded-full border px-3.5 py-2 text-sm font-medium transition-colors disabled:opacity-60 aria-pressed:border-primary aria-pressed:bg-primary aria-pressed:text-primary-foreground";
 
 interface FieldInputProps {
   field: FormField;
@@ -29,9 +45,19 @@ interface FieldInputProps {
 }
 
 /** One application form answer, drawn from its config in lib/application-form.ts */
-export function FieldInput({ field, value, onChange, campuses, years, grades, error, disabled }: FieldInputProps) {
+export function FieldInput({
+  field,
+  value,
+  onChange,
+  campuses,
+  years,
+  grades,
+  error,
+  disabled,
+}: FieldInputProps) {
   const id = useId();
-  const byId = field.options === "campuses" || field.options === "academic_years";
+  const byId =
+    field.options === "campuses" || field.options === "academic_years";
   const options =
     field.options === "campuses"
       ? campuses.map((c) => ({ value: String(c.id), label: c.name }))
@@ -66,7 +92,12 @@ export function FieldInput({ field, value, onChange, campuses, years, grades, er
             onClick={() => onChange(!value)}
             className="relative h-7 w-12 shrink-0 rounded-full bg-muted-foreground/25 transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-60 aria-checked:bg-primary"
           >
-            <span className={cn("absolute top-1 left-1 size-5 rounded-full bg-white shadow transition-transform", !!value && "translate-x-5")} />
+            <span
+              className={cn(
+                "absolute top-1 left-1 size-5 rounded-full bg-white shadow transition-transform",
+                !!value && "translate-x-5",
+              )}
+            />
           </button>
         </div>
         <FieldError>{error}</FieldError>
@@ -79,26 +110,31 @@ export function FieldInput({ field, value, onChange, campuses, years, grades, er
       <FieldLabel htmlFor={id}>{label}</FieldLabel>
 
       {field.type === "select" && field.search ? (
-        // Native search: typing filters the list; anything that isn't an option is dropped on leaving
-        <>
-          <Input
+        <Combobox
+          items={options.map((o) => o.value)}
+          value={value ? String(value) : null}
+          onValueChange={(v) => onChange(v ?? "")}
+          disabled={disabled}
+        >
+          <ComboboxInput
             id={id}
-            list={`${id}-list`}
-            className="h-11 rounded-lg"
             placeholder="Type to search"
+            showClear={!!value}
+            className="h-11 w-full rounded-lg"
             aria-invalid={!!error}
             disabled={disabled}
-            autoComplete="off"
-            value={String(value ?? "")}
-            onChange={(e) => onChange(e.target.value)}
-            onBlur={(e) => onChange(options.find((o) => o.value.toLowerCase() === e.target.value.trim().toLowerCase())?.value ?? "")}
           />
-          <datalist id={`${id}-list`}>
-            {options.map((o) => (
-              <option key={o.value} value={o.value} />
-            ))}
-          </datalist>
-        </>
+          <ComboboxContent>
+            <ComboboxEmpty>No match. Check the spelling.</ComboboxEmpty>
+            <ComboboxList>
+              {(item: string) => (
+                <ComboboxItem key={item} value={item}>
+                  {item}
+                </ComboboxItem>
+              )}
+            </ComboboxList>
+          </ComboboxContent>
+        </Combobox>
       ) : field.type === "select" ? (
         <select
           id={id}
@@ -106,7 +142,15 @@ export function FieldInput({ field, value, onChange, campuses, years, grades, er
           aria-invalid={!!error}
           disabled={disabled}
           value={value == null ? "" : String(value)}
-          onChange={(e) => onChange(byId ? (e.target.value ? Number(e.target.value) : null) : e.target.value)}
+          onChange={(e) =>
+            onChange(
+              byId
+                ? e.target.value
+                  ? Number(e.target.value)
+                  : null
+                : e.target.value,
+            )
+          }
         >
           <option value="">Choose</option>
           {options.map((o) => (
@@ -126,15 +170,32 @@ export function FieldInput({ field, value, onChange, campuses, years, grades, er
           onChange={(e) => onChange(e.target.value)}
         />
       ) : field.type === "seg" ? (
-        <div role="group" aria-label={field.label} className="flex flex-wrap gap-2">
+        <div
+          role="group"
+          aria-label={field.label}
+          className="flex flex-wrap gap-2"
+        >
           {options.map((o) => (
-            <button key={o.value} type="button" aria-pressed={value === o.value} disabled={disabled} onClick={() => onChange(o.value)} className={pill}>
+            <button
+              key={o.value}
+              type="button"
+              aria-pressed={value === o.value}
+              disabled={disabled}
+              onClick={() => onChange(o.value)}
+              className={pill}
+            >
               {o.label}
             </button>
           ))}
         </div>
       ) : field.type === "chips" ? (
-        <ChipsInput field={field} options={options} value={value} onChange={onChange} disabled={disabled} />
+        <ChipsInput
+          field={field}
+          options={options}
+          value={value}
+          onChange={onChange}
+          disabled={disabled}
+        />
       ) : (
         <Input
           id={id}
@@ -142,7 +203,13 @@ export function FieldInput({ field, value, onChange, campuses, years, grades, er
           className="h-11 rounded-lg"
           aria-invalid={!!error}
           disabled={disabled}
-          autoComplete={field.type === "tel" ? "tel" : field.type === "email" ? "email" : "off"}
+          autoComplete={
+            field.type === "tel"
+              ? "tel"
+              : field.type === "email"
+                ? "email"
+                : "off"
+          }
           value={String(value ?? "")}
           onChange={(e) => onChange(e.target.value)}
         />
@@ -155,34 +222,81 @@ export function FieldInput({ field, value, onChange, campuses, years, grades, er
 }
 
 /** Multi-select pills; with `addable`, typed-in values join the list as their own pills */
-function ChipsInput({ field, options, value, onChange, disabled }: { field: FormField; options: { value: string; label: string }[]; value: unknown; onChange: (value: unknown) => void; disabled?: boolean }) {
+function ChipsInput({
+  field,
+  options,
+  value,
+  onChange,
+  disabled,
+}: {
+  field: FormField;
+  options: { value: string; label: string }[];
+  value: unknown;
+  onChange: (value: unknown) => void;
+  disabled?: boolean;
+}) {
   const list = (value as string[] | undefined) ?? [];
-  const typed = list.filter((v) => !options.some((o) => o.value === v)).map((v) => ({ value: v, label: v }));
+  // addable: only the parent's own entries, as removable tags; otherwise the preset pills plus anything typed earlier
+  const typed = list
+    .filter((v) => !options.some((o) => o.value === v))
+    .map((v) => ({ value: v, label: v }));
+  const shown = field.addable
+    ? list.map((v) => ({ value: v, label: v }))
+    : [...options, ...typed];
   const add = (input: HTMLInputElement) => {
     const v = input.value.trim();
     input.value = "";
-    if (v && !list.some((x) => x.toLowerCase() === v.toLowerCase())) onChange([...list.filter((x) => x !== "None"), v]);
+    if (v && !list.some((x) => x.toLowerCase() === v.toLowerCase()))
+      onChange([...list.filter((x) => x !== "None"), v]);
   };
 
   return (
     <div className="space-y-2">
-      <div role="group" aria-label={field.label} className="flex flex-wrap gap-2">
-        {[...options, ...typed].map((o) => {
-          const on = list.includes(o.value);
-          // "None" can't sit alongside anything else
-          const toggle = () =>
-            onChange(on ? list.filter((v) => v !== o.value) : o.value === "None" ? ["None"] : [...list.filter((v) => v !== "None"), o.value]);
-          return (
-            <button key={o.value} type="button" aria-pressed={on} disabled={disabled} onClick={toggle} className={pill}>
-              {o.label}
-            </button>
-          );
-        })}
-      </div>
+      {shown.length > 0 && (
+        <div
+          role="group"
+          aria-label={field.label}
+          className="flex flex-wrap gap-2"
+        >
+          {shown.map((o) => {
+            const on = list.includes(o.value);
+            // "None" can't sit alongside anything else
+            const toggle = () =>
+              onChange(
+                on
+                  ? list.filter((v) => v !== o.value)
+                  : o.value === "None"
+                    ? ["None"]
+                    : [...list.filter((v) => v !== "None"), o.value],
+              );
+            return (
+              <button
+                key={o.value}
+                type="button"
+                aria-pressed={on}
+                aria-label={field.addable ? `Remove ${o.label}` : undefined}
+                disabled={disabled}
+                onClick={toggle}
+                className={cn(
+                  pill,
+                  field.addable && "inline-flex items-center gap-1.5",
+                )}
+              >
+                {o.label}
+                {field.addable && !disabled && <XIcon className="size-3.5" />}
+              </button>
+            );
+          })}
+        </div>
+      )}
       {field.addable && !disabled && list.length < 20 && (
         <Input
           aria-label={`Add to ${field.label.toLowerCase()}`}
-          placeholder="Type another and press Enter"
+          placeholder={
+            list.length
+              ? "Add another and press Enter"
+              : "Type a language and press Enter"
+          }
           maxLength={50}
           className="h-11 rounded-lg"
           onKeyDown={(e) => {
@@ -224,9 +338,16 @@ export function FileInput({
 
   const onFile = (file: File | undefined) => {
     if (!file) return;
-    if (file.size > 10 * 1024 * 1024) return toast.error("The file is larger than 10 MB.");
+    if (file.size > 10 * 1024 * 1024)
+      return toast.error("The file is larger than 10 MB.");
     if (!child) return onPick?.(file);
-    upload.mutate({ kind: field.key, file }, { onSuccess: () => toast.success(`${field.label} uploaded`), onError: (e) => toast.error(e.message) });
+    upload.mutate(
+      { kind: field.key, file },
+      {
+        onSuccess: () => toast.success(`${field.label} uploaded`),
+        onError: (e) => toast.error(e.message),
+      },
+    );
   };
 
   return (
@@ -239,14 +360,24 @@ export function FileInput({
         className={cn(
           "flex cursor-pointer items-center gap-3 rounded-xl border border-dashed p-3 has-focus-visible:ring-3 has-focus-visible:ring-ring/50",
           locked && "cursor-not-allowed opacity-60",
-          sentBack && "border-destructive bg-destructive/5"
+          sentBack && "border-destructive bg-destructive/5",
         )}
       >
         <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-          {upload.isPending ? <Loader2Icon className="size-4 animate-spin" /> : document || picked ? <CircleCheckIcon className="size-4" /> : <CameraIcon className="size-4" />}
+          {upload.isPending ? (
+            <Loader2Icon className="size-4 animate-spin" />
+          ) : document || picked ? (
+            <CircleCheckIcon className="size-4" />
+          ) : (
+            <CameraIcon className="size-4" />
+          )}
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-sm font-semibold">{document?.original_name ?? picked?.name ?? "Take a photo or choose a file"}</span>
+          <span className="block truncate text-sm font-semibold">
+            {document?.original_name ??
+              picked?.name ??
+              "Take a photo or choose a file"}
+          </span>
           <span className="block text-xs text-muted-foreground">
             {!child
               ? picked
@@ -262,7 +393,13 @@ export function FileInput({
           </span>
         </span>
         {document?.url && (
-          <a href={document.url} target="_blank" rel="noreferrer" className="text-sm font-medium text-primary hover:underline" onClick={(e) => e.stopPropagation()}>
+          <a
+            href={document.url}
+            target="_blank"
+            rel="noreferrer"
+            className="text-sm font-medium text-primary hover:underline"
+            onClick={(e) => e.stopPropagation()}
+          >
             View
           </a>
         )}
