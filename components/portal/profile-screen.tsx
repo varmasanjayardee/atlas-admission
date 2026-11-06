@@ -80,8 +80,8 @@ export function ProfileScreen() {
           {/* The mobile and email are how the family signs in, so admissions changes them */}
           <p className="mt-2 text-sm text-muted-foreground">
             To change your mobile or email,{" "}
-            <a href={`mailto:${site.helpEmail}?subject=${encodeURIComponent("Change my contact details")}`} className="font-medium text-primary hover:underline">
-              write to admissions
+            <a href={`tel:${site.helpLine}`} className="font-medium text-primary hover:underline">
+              call admissions on {site.helpLine}
             </a>
             .
           </p>
@@ -97,7 +97,7 @@ export function ProfileScreen() {
             <ul>
               <li>
                 <a
-                  href={`mailto:${site.helpEmail}?subject=${encodeURIComponent("My application data")}`}
+                  href={`tel:${site.helpLine}`}
                   className={cn(row, "-mx-2 rounded-lg px-2 hover:bg-muted/50")}
                 >
                   <ShieldCheckIcon className="size-5 shrink-0 text-muted-foreground" />

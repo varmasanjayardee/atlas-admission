@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { toast } from "sonner";
-import { CheckIcon, MailIcon, PlusIcon, ShieldCheckIcon } from "lucide-react";
+import { CheckIcon, PhoneIcon, PlusIcon, ShieldCheckIcon } from "lucide-react";
 import { JOURNEY_STEPS } from "@/lib/journey";
 import { site } from "@/lib/site";
 
@@ -81,14 +81,14 @@ export function HelpScreen() {
           <h2 className="mt-1.5 text-xl font-semibold">We are here to help</h2>
           <ul className="mt-3">
             <li className="flex items-center gap-4 border-t py-4 first:border-t-0">
-              <MailIcon className="size-5 shrink-0 text-muted-foreground" />
-              <a href={`mailto:${site.helpEmail}`} className="min-w-0 flex-1">
-                <span className="block truncate font-medium hover:underline">{site.helpEmail}</span>
-                <span className="block text-sm text-muted-foreground">Email</span>
+              <PhoneIcon className="size-5 shrink-0 text-muted-foreground" />
+              <a href={`tel:${site.helpLine}`} className="min-w-0 flex-1">
+                <span className="block truncate font-medium hover:underline">{site.helpLine}</span>
+                <span className="block text-sm text-muted-foreground">Help line</span>
               </a>
               <button
                 type="button"
-                onClick={() => copy(site.helpEmail)}
+                onClick={() => copy(site.helpLine)}
                 className="rounded-full bg-primary/10 px-3 py-1.5 text-sm font-semibold text-primary hover:bg-primary/15"
               >
                 Copy

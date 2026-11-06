@@ -10,6 +10,8 @@ export const enquiryFormSchema = {
   first_name: z.string().trim().min(1, "Enter your first name").max(100),
   last_name: z.string().trim().max(100),
   email: z.email("Enter a valid email address"),
+  /** A name from lib/campuses.ts */
+  campus: z.string().min(1, "Choose a campus"),
 };
 
 export type EnquiryFormInput = { [K in keyof typeof enquiryFormSchema]: string };
@@ -254,6 +256,8 @@ export const leadSchema = z.object({
   email: z.string(),
   phone_number: z.string(),
   campus: z.string(),
+  /** The campus that name matched, for this environment's database */
+  campus_id: z.number().nullable(),
   enquiry_type: z.string(),
   access_token: z.string(),
   /** Where the login code goes, set on the server (SEND_ADMISSION_OTP_TO_EMAIL) */

@@ -167,7 +167,7 @@ export function FeeStep({ admission, step, state, goNext, kind }: StepContentPro
         <StepSection title="What it covers">
           {!group?.items.length && !paid ? (
             <p className="rounded-xl bg-muted p-4 text-sm text-muted-foreground">
-              Fees for {child.grade || "this grade"} at {admission.campus || "your campus"} aren&apos;t published yet. Your counsellor will share them, or email {site.helpEmail}.
+              Fees for {child.grade || "this grade"} at {admission.campus || "your campus"} aren&apos;t published yet. Your counsellor will share them, or call {site.helpLine}.
             </p>
           ) : (
             <dl className="divide-y rounded-xl border px-4 text-sm">

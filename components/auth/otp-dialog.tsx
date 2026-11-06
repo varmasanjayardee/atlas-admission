@@ -133,7 +133,7 @@ function OtpForm({ target, onBack }: { target: OtpTarget; onBack: () => void }) 
             Resend code
           </button>
         )}
-        <a href={`mailto:${site.helpEmail}`} className="text-primary underline-offset-4 hover:underline">
+        <a href={`tel:${site.helpLine}`} className="text-primary underline-offset-4 hover:underline">
           Need help?
         </a>
       </div>

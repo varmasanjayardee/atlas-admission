@@ -283,7 +283,8 @@ function initialValues(section: FormSection, lead: Lead, child: Child | null): F
 
   const saved = sectionValues(section, lead, child);
   return {
-    values: Object.fromEntries(answerFields(section).map((f) => [f.key, saved[f.key] ?? emptyOf(f)])),
+    // The campus chosen on the enquiry starts selected; they can still change it
+    values: Object.fromEntries(answerFields(section).map((f) => [f.key, saved[f.key] ?? (f.key === "campus" ? lead.campus_id : null) ?? emptyOf(f)])),
     rows: [],
   };
 }

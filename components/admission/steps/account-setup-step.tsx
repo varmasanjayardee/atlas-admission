@@ -84,7 +84,7 @@ export function AccountSetupStep({ admission }: StepContentProps) {
           </div>
         ) : (
           <p className="rounded-xl bg-muted p-4 text-sm text-muted-foreground">
-            No parent or guardian is on the application. Email {site.helpEmail} so an account can be made for you.
+            No parent or guardian is on the application. Call {site.helpLine} so an account can be made for you.
           </p>
         )}
       </StepSection>

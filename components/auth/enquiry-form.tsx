@@ -1,13 +1,14 @@
 "use client";
 
 import type { ComponentProps } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { Loader2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { fieldErrors } from "@/lib/api";
+import { CAMPUSES } from "@/lib/campuses";
 import { zodRule } from "@/lib/form";
 import { enquiryFormSchema, type EnquiryFormInput, type Lead } from "@/schemas/auth.schema";
 import { useCreateLead } from "@/services/enquiry.service";
@@ -25,9 +26,11 @@ interface EnquiryFormProps {
 /** No enquiry link: capture the parent's details, then verify their number */
 export function EnquiryForm({ linkInvalid, isSendingOtp, onCreated, onSignIn }: EnquiryFormProps) {
   const createLead = useCreateLead();
-  const { register, handleSubmit, formState, setError } = useForm<EnquiryFormInput>({
-    defaultValues: { phone_number: "", first_name: "", last_name: "", email: "" },
+  const { control, register, handleSubmit, formState, setError } = useForm<EnquiryFormInput>({
+    defaultValues: { phone_number: "", first_name: "", last_name: "", email: "", campus: "" },
   });
+  const campus = useWatch({ control, name: "campus" });
+  const address = CAMPUSES.find((c) => c.name === campus)?.address;
   const { errors } = formState;
   const isBusy = createLead.isPending || isSendingOtp;
 
@@ -92,6 +95,26 @@ export function EnquiryForm({ linkInvalid, isSendingOtp, onCreated, onSignIn }: 
           error={errors.email?.message}
           {...field("email")}
         />
+        <Field data-invalid={!!errors.campus}>
+          <FieldLabel htmlFor="campus" className="text-white">
+            Campus
+          </FieldLabel>
+          <select
+            id="campus"
+            aria-invalid={!!errors.campus}
+            className="h-14 w-full rounded-xl border-0 bg-card px-4 text-base text-card-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+            {...field("campus")}
+          >
+            <option value="">Select a campus</option>
+            {CAMPUSES.map((c) => (
+              <option key={c.id} value={c.name}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+          {address && <p className="text-sm text-white/80">{address}</p>}
+          <FieldError className="text-red-300">{errors.campus?.message}</FieldError>
+        </Field>
       </div>
 
       <Button type="submit" size="lg" className="mt-8 h-14 rounded-xl text-lg font-semibold" disabled={isBusy}>

@@ -176,7 +176,7 @@ export function JoiningStep({ admission, state, goNext }: StepContentProps) {
         ) : (
           <p className="text-center text-sm text-muted-foreground">
             {mine.length
-              ? `${mine.length} thing${mine.length === 1 ? "" : "s"} left for you. Questions? ${site.helpEmail}`
+              ? `${mine.length} thing${mine.length === 1 ? "" : "s"} left for you. Questions? Call ${site.helpLine}`
               : child.joining_date
                 ? "All done on your side."
                 : "All done on your side. Your Atlas account is set up once admissions confirms the joining date."}

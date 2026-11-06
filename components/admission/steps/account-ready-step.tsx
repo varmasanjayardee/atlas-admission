@@ -72,7 +72,7 @@ export function AccountReadyStep({ admission }: StepContentProps) {
             </li>
             <li className="flex gap-3">
               <LifeBuoyIcon className="mt-0.5 size-4 shrink-0 text-primary" />
-              Lost it? Use &ldquo;Forgot password&rdquo; on the Atlas sign-in page, or email {site.helpEmail}.
+              Lost it? Use &ldquo;Forgot password&rdquo; on the Atlas sign-in page, or call {site.helpLine}.
             </li>
           </ul>
         </StepSection>

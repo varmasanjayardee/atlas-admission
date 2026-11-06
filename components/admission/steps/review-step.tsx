@@ -148,9 +148,9 @@ export function ReviewStep({ admission, goNext }: StepContentProps) {
 
         {(child.outcome === "rejected" || child.outcome === "not_offered") && (
           <p className="text-sm text-muted-foreground">
-            Questions about the decision? Email{" "}
-            <a href={`mailto:${site.helpEmail}`} className="font-medium text-primary hover:underline">
-              {site.helpEmail}
+            Questions about the decision? Call{" "}
+            <a href={`tel:${site.helpLine}`} className="font-medium text-primary hover:underline">
+              {site.helpLine}
             </a>
             .
           </p>

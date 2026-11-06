@@ -195,9 +195,9 @@ export function OfferStep({ admission, goNext }: StepContentProps) {
           </>
         ) : (
           <p className="text-center text-sm text-muted-foreground">
-            Questions? Email{" "}
-            <a href={`mailto:${site.helpEmail}`} className="font-medium text-primary hover:underline">
-              {site.helpEmail}
+            Questions? Call{" "}
+            <a href={`tel:${site.helpLine}`} className="font-medium text-primary hover:underline">
+              {site.helpLine}
             </a>
           </p>
         )}

@@ -1,5 +1,5 @@
 import { format, parseISO } from "date-fns";
-import { MailIcon } from "lucide-react";
+import { PhoneIcon } from "lucide-react";
 import { formatCurrency, getInitials } from "@/lib/format";
 import { site } from "@/lib/site";
 import { useChildFees } from "@/services/admission.service";
@@ -47,9 +47,9 @@ export function CounsellorCard({ counsellor }: { counsellor: Counsellor | null }
       <p className="mt-2 text-xl font-bold tracking-tight">{first}</p>
       <p className="flex flex-wrap items-center gap-x-2 text-sm text-muted-foreground">
         {rest.join(" ")}
-        <a href={`mailto:${site.helpEmail}`} className="inline-flex items-center gap-1 text-primary hover:underline">
-          <MailIcon className="size-3.5" />
-          Email
+        <a href={`tel:${site.helpLine}`} className="inline-flex items-center gap-1 text-primary hover:underline">
+          <PhoneIcon className="size-3.5" />
+          {site.helpLine}
         </a>
       </p>
     </section>

@@ -41,10 +41,10 @@ export function SideNav() {
       </nav>
 
       <a
-        href={`mailto:${site.helpEmail}`}
+        href={`tel:${site.helpLine}`}
         className="mt-auto px-3 text-sm text-white/60 hover:text-white hover:underline"
       >
-        {site.helpEmail}
+        Help line: {site.helpLine}
       </a>
       <button
         type="button"
