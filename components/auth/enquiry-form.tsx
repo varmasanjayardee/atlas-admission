@@ -56,7 +56,7 @@ export function EnquiryForm({ linkInvalid, isSendingOtp, onCreated, onSignIn }: 
       <p className="mt-6 text-lg leading-relaxed text-white/90">
         {linkInvalid
           ? "That link has expired or is no longer valid. Share your details below and we'll get you started again."
-          : "Share a few details and verify your mobile number. We'll send you a 6-digit code."}
+          : "Share a few details and verify your Email address. We'll send you a 6-digit code."}
       </p>
 
       <div className="mt-10 flex flex-col gap-6">

@@ -32,7 +32,7 @@ export function SchoolPanel() {
         <span aria-hidden className="mt-8 block h-0.5 w-20 bg-maroon" />
         <p className="mt-10 text-xl leading-loose text-navy-ink/85">
           We are delighted to accompany your family on this journey. Your child’s prospective seat at
-          our New Friends Colony campus is handled with individual care, transparency, and personal
+          our School is handled with individual care, transparency, and personal
           attention.
         </p>
       </div>
