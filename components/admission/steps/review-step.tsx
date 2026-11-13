@@ -56,12 +56,16 @@ const DECISION = {
   },
 } as const;
 
+// Declined or expired later, at the offer step: the review itself still offered a place
+const reviewOutcome = (child: Child) => (child.outcome === "declined" || child.outcome === "withdrawn" ? "offered" : child.outcome);
+
 const when = (iso?: string) => (iso ? format(parseISO(iso), "d MMM yyyy") : undefined);
 
 function timeline(child: Child): Node[] {
   const doneAt = (step: number) => child.steps.find((s) => s.step === step)?.completed_at;
-  const decided = child.outcome !== "pending" && child.outcome !== "waitlisted";
-  const decision = DECISION[child.outcome as keyof typeof DECISION];
+  const outcome = reviewOutcome(child);
+  const decided = outcome !== "pending" && outcome !== "waitlisted";
+  const decision = DECISION[outcome];
 
   return [
     { title: "Application submitted", detail: when(doneAt(1)), state: "done" },
@@ -69,12 +73,13 @@ function timeline(child: Child): Node[] {
     { title: "Campus visit booked", detail: when(doneAt(3)), state: "done" },
     { title: "Visited the campus", detail: when(doneAt(4)), state: "done" },
     // Applications reviewed before the test step existed skipped it
-    ...(doneAt(5) ? [{ title: "Took the aptitude test", detail: when(doneAt(5)), state: "done" as const }] : []),
+    // Only a test that happened: skipped (or Early Years) leaves no test date
+    ...(doneAt(5) && child.aptitude_test_at ? [{ title: "Took the aptitude test", detail: when(doneAt(5)), state: "done" as const }] : []),
     {
       title: "In review with the admissions team",
       detail: decided
         ? `Finished ${when(child.reviewed_at ?? doneAt(6)) ?? ""}`
-        : child.outcome === "waitlisted"
+        : outcome === "waitlisted"
           ? "On the waiting list"
           : "Happening now",
       state: decided ? "done" : "current",
@@ -82,7 +87,7 @@ function timeline(child: Child): Node[] {
     {
       title: decided ? (decision?.label ?? "Decision") : "Decision",
       detail: decided ? when(child.reviewed_at ?? undefined) : "Accepted, waiting list, rejected or not offered",
-      state: !decided ? "upcoming" : child.outcome === "offered" ? "good" : "bad",
+      state: !decided ? "upcoming" : outcome === "offered" ? "good" : "bad",
     },
   ];
 }
@@ -91,7 +96,8 @@ function timeline(child: Child): Node[] {
 export function ReviewStep({ admission, goNext }: StepContentProps) {
   const child = admission.child!;
   const name = child.first_name;
-  const decision = DECISION[child.outcome as keyof typeof DECISION] ?? DECISION.pending;
+  const outcome = reviewOutcome(child);
+  const decision = DECISION[outcome];
   const Icon = decision.icon;
   const nodes = timeline(child);
   // The line fills to the last reached point
@@ -146,7 +152,7 @@ export function ReviewStep({ admission, goNext }: StepContentProps) {
           ))}
         </ol>
 
-        {(child.outcome === "rejected" || child.outcome === "not_offered") && (
+        {(outcome === "rejected" || outcome === "not_offered") && (
           <p className="text-sm text-muted-foreground">
             Questions about the decision? Call{" "}
             <a href={`tel:${site.helpLine}`} className="font-medium text-primary hover:underline">
@@ -157,7 +163,7 @@ export function ReviewStep({ admission, goNext }: StepContentProps) {
         )}
       </StepBody>
 
-      {child.outcome === "offered" && (
+      {outcome === "offered" && (
         <StepFooter>
           <Button size="lg" className="h-12 rounded-xl text-base font-semibold" onClick={goNext}>
             Next: {JOURNEY_STEPS[6].title}

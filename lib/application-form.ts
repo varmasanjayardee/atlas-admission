@@ -23,7 +23,7 @@ export type Option = string | { value: string; label: string };
 export interface FormField {
   key: string;
   label: string;
-  type: "text" | "email" | "tel" | "date" | "textarea" | "select" | "seg" | "chips" | "toggle" | "file";
+  type: "text" | "email" | "tel" | "date" | "textarea" | "select" | "seg" | "chips" | "toggle" | "file" | "photo";
   required?: boolean;
   /** Filled from the API: "campuses", or "academic_years"/"grades" (the chosen campus's schools.AcademicYear rows / the grades it admits) */
   options?: readonly Option[] | "campuses" | "academic_years" | "grades";
@@ -146,6 +146,7 @@ export const APPLICATION_SECTIONS: FormSection[] = [
         ],
       },
       { key: "name", label: "Full name", type: "text", required: true },
+      { key: "photo", label: "Photo", type: "photo", help: "Optional. A clear, recent photo of their face." },
       { key: "mobile", label: "Mobile", type: "tel", required: true },
       { key: "email", label: "Email", type: "email", required: true },
       { key: "occupation", label: "Occupation", type: "text" },

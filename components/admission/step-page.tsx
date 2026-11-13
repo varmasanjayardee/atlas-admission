@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { STATE_BADGE } from "@/components/admission/step-drawer";
 import { StepContent } from "@/components/admission/steps";
 import { useSelectedStudent } from "@/hooks/use-selected-student";
-import { canOpenStep, getStepState, JOURNEY_STEPS, TOTAL_STEPS } from "@/lib/journey";
+import { canOpenStep, getStepState, JOURNEY_STEPS, nextStepNumber, TOTAL_STEPS } from "@/lib/journey";
 import { useAdmission } from "@/services/admission.service";
 
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -39,7 +39,10 @@ export function StepPage({ number }: { number: number }) {
       </div>
     );
 
-  const goNext = () => router.push(step.number < TOTAL_STEPS ? `/journey/${step.number + 1}` : "/");
+  const goNext = () => {
+    const next = nextStepNumber(step.number, admission);
+    router.push(next ? `/journey/${next}` : "/");
+  };
 
   return (
     <div className="mx-auto max-w-6xl">

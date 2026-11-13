@@ -17,7 +17,7 @@ import {
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { getInitials } from "@/lib/format";
-import { JOURNEY_STEPS } from "@/lib/journey";
+import { JOURNEY_STEPS, nextStepNumber } from "@/lib/journey";
 import { site } from "@/lib/site";
 import { useDownloadVisitPass } from "@/services/admission.service";
 import { StepBody, StepFooter, StepSection, type StepContentProps } from "./step-layout";
@@ -203,7 +203,7 @@ export function VisitDayStep({ admission, state, goNext }: StepContentProps) {
       {state === "done" && (
         <StepFooter>
           <Button size="lg" className="h-12 rounded-xl text-base font-semibold" onClick={goNext}>
-            Next: {JOURNEY_STEPS[4].title}
+            Next: {JOURNEY_STEPS[(nextStepNumber(4, admission) ?? 5) - 1].title}
           </Button>
         </StepFooter>
       )}

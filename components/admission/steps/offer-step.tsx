@@ -6,7 +6,7 @@ import { CalendarClockIcon, CircleCheckIcon, CircleXIcon, Loader2Icon, ShieldChe
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { feeNote, formatCurrency } from "@/lib/format";
-import { JOURNEY_STEPS } from "@/lib/journey";
+import { JOURNEY_STEPS, offerExpired } from "@/lib/journey";
 import { site } from "@/lib/site";
 import { cn } from "@/lib/utils";
 import type { Child } from "@/schemas/auth.schema";
@@ -28,7 +28,7 @@ export function OfferStep({ admission, goNext }: StepContentProps) {
   const [now] = useState(() => Date.now());
 
   const expiresAt = child.offer_expires_at;
-  const expired = !!expiresAt && parseISO(expiresAt).getTime() < now;
+  const expired = offerExpired(child, now);
   const open = child.outcome === "offered" && !child.offer_accepted_at && !expired;
   const registrationPaid = child.payments.find((p) => p.kind === "registration" && p.status === "success");
   const parentFirst = admission.lead.first_name;

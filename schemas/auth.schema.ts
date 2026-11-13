@@ -199,6 +199,8 @@ export const childSchema = z.object({
   reference: text,
   /** 1–11, see JOURNEY_STEPS in lib/journey.ts; 12 once the journey is finished */
   current_step: z.number(),
+  /** False for Early Years: step 5 (aptitude test) is skipped. Defaults to true until the backend sends it */
+  needs_aptitude_test: z.boolean().default(true),
   /**
    * Step 6 review: pending = in review, waitlisted, offered = accepted, rejected, not_offered.
    * Step 7 answer: declined, or withdrawn when the offer expired.
@@ -240,6 +242,9 @@ export const guardianSchema = z.object({
   qualification: text,
   is_alumnus: z.boolean(),
   is_primary: z.boolean(),
+  /** Storage key; send it back unchanged to keep the photo when the list is saved again */
+  photo: z.string().default(""),
+  photo_url: z.string().nullable().default(null),
 });
 
 export const emergencyContactSchema = z.object({

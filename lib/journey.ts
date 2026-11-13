@@ -12,6 +12,7 @@ import {
   UserCogIcon,
   WalletIcon,
 } from "lucide-react";
+import type { Child } from "@/schemas/auth.schema";
 import type { Admission } from "@/types/admission.types";
 
 export interface JourneyStep {
@@ -138,6 +139,11 @@ export const JOURNEY_STEPS: JourneyStep[] = [
 
 export const TOTAL_STEPS = JOURNEY_STEPS.length;
 
+/** An offer left unanswered past its deadline. The backend only marks it "withdrawn" (and moves past
+ * step 7) when the family next acts, so the portal applies the same rule as soon as it loads */
+export const offerExpired = (child: Child | null, now = Date.now()) =>
+  child?.outcome === "offered" && !child.offer_accepted_at && !!child.offer_expires_at && Date.parse(child.offer_expires_at) < now;
+
 /** The review (or an unanswered offer) closed the journey */
 export const isEnded = (admission: Admission) =>
   (["rejected", "not_offered", "declined", "withdrawn"] as const).some((o) => o === admission.outcome);
@@ -152,15 +158,30 @@ const ENDED_TITLE = {
 /** The headline when the journey has closed, else undefined */
 export const endedTitle = (admission: Admission): string | undefined => ENDED_TITLE[admission.outcome as keyof typeof ENDED_TITLE];
 
-export type StepState = "done" | "current" | "upcoming" | "closed";
+export type StepState = "done" | "current" | "upcoming" | "closed" | "skipped";
+
+/** No aptitude test: Early Years never have one, and the counsellor can skip it (step 5 passed with no test date) */
+export const APTITUDE_TEST_STEP = 5;
+const testSkipped = (admission: Admission) =>
+  admission.child?.needs_aptitude_test === false || (admission.currentStep > APTITUDE_TEST_STEP && !admission.child?.aptitude_test_at);
+export const skippedNote = (admission: Admission) =>
+  admission.child?.needs_aptitude_test === false ? "Not needed for Early Years" : "Your counsellor decided a test isn't needed";
 
 export function getStepState(step: number, admission: Admission): StepState {
+  if (step === APTITUDE_TEST_STEP && testSkipped(admission)) return "skipped";
   // Not offered or withdrawn: the journey stops where it is and later steps never open
   const ended = isEnded(admission);
   if (ended && step >= admission.currentStep) return "closed";
   if (step < admission.currentStep) return "done";
   if (step === admission.currentStep) return "current";
   return "upcoming";
+}
+
+/** The step after `number`, passing over a skipped one; undefined after the last */
+export function nextStepNumber(number: number, admission: Admission): number | undefined {
+  const next = number + 1;
+  if (next > TOTAL_STEPS) return undefined;
+  return getStepState(next, admission) === "skipped" ? nextStepNumber(next, admission) : next;
 }
 
 /** Done and current steps can be opened; upcoming and closed ones are locked */

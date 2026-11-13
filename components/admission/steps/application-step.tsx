@@ -24,7 +24,7 @@ import { phoneSchema, type Child, type Lead } from "@/schemas/auth.schema";
 import { useCampuses, useSaveChild, useSaveFamily, useSubmitApplication, useUploadDocument } from "@/services/admission.service";
 import { useProfileStore } from "@/store/profile.store";
 import { z } from "zod";
-import { FieldInput, FileInput } from "./application-fields";
+import { FieldInput, FileInput, PhotoInput } from "./application-fields";
 import { StepBody, StepFooter, type StepContentProps } from "./step-layout";
 
 const nextTitle = JOURNEY_STEPS[1].title;
@@ -372,6 +372,22 @@ function SectionEditor({
           picked={picked[field.key]}
           onPick={(file) => setPicked((p) => ({ ...p, [field.key]: file }))}
         />
+      ) : field.type === "photo" ? (
+        <Controller
+          key={field.key}
+          control={control}
+          name={`${prefix}.${field.key}` as `values.${string}`}
+          render={({ field: input }) => (
+            <PhotoInput
+              field={field}
+              value={String(input.value ?? "")}
+              // The saved photo's link, while the key is still the saved one
+              savedUrl={input.value && input.value === values?.photo ? (values?.photo_url as string | null) : null}
+              onChange={input.onChange}
+              disabled={readOnly}
+            />
+          )}
+        />
       ) : (
         <Controller
           key={field.key}
@@ -430,7 +446,7 @@ function SectionEditor({
                 <legend className="flex w-full items-center justify-between px-1 text-sm font-semibold">
                   {section.repeat!.one} {i + 1}
                 </legend>
-                <RepeatRow control={control} index={i} section={section} render={(fields) => answers(`rows.${i}`, fields)} />
+                <RepeatRow control={control} index={i} section={section} render={(fields, row) => answers(`rows.${i}`, fields, row)} />
                 {!readOnly && rows.fields.length > section.repeat!.min && (
                   <button type="button" onClick={() => rows.remove(i)} className="text-sm font-medium text-destructive hover:underline">
                     Remove
@@ -491,8 +507,8 @@ function RepeatRow({
   control: Control<FormValues>;
   index: number;
   section: FormSection;
-  render: (fields: FormField[]) => React.ReactNode;
+  render: (fields: FormField[], row: Values) => React.ReactNode;
 }) {
   const row = useWatch({ control, name: `rows.${index}` });
-  return <>{render(visibleFields(section, row ?? {}))}</>;
+  return <>{render(visibleFields(section, row ?? {}), row ?? {})}</>;
 }

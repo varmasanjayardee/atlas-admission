@@ -12,6 +12,7 @@ import {
   type Lead,
   type Payment,
 } from "@/schemas/auth.schema";
+import { offerExpired } from "@/lib/journey";
 import { authKeys, meQuery } from "@/services/auth.service";
 import type { Admission, Student } from "@/types/admission.types";
 
@@ -24,11 +25,13 @@ const toStudents = (lead: Lead): Student[] =>
 
 function toAdmission(lead: Lead, studentId: string): Admission {
   const child = lead.children.find((c) => String(c.id) === studentId) ?? null;
+  // ponytail: checked when me/ loads, not on a timer; a page left open past the deadline catches up on the next refetch
+  const expired = offerExpired(child);
   return {
     studentId,
-    currentStep: child?.current_step ?? 1,
+    currentStep: (child?.current_step ?? 1) + (expired ? 1 : 0),
     enquiryDate: lead.created_at,
-    outcome: child?.outcome ?? "pending",
+    outcome: expired ? "withdrawn" : (child?.outcome ?? "pending"),
     child,
     lead,
     campus: lead.campus,
@@ -100,14 +103,24 @@ export function useSaveFamily() {
  * Documents go straight to storage: sign (keyed-backend checks kind, type, size and
  * the step), PUT the file to the presigned URL, then attach the key to the child.
  */
-async function uploadDocument(documentsUrl: string, kind: string, file: File, extra: Record<string, string> = {}) {
+async function putToStorage(signUrl: string, file: File, body: Record<string, string> = {}) {
   const contentType = file.type || ({ pdf: "application/pdf", png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg" } as Record<string, string>)[file.name.split(".").pop()?.toLowerCase() ?? ""] || "";
   const signed = await api
-    .post(`${documentsUrl}sign/`, { kind, filename: file.name, content_type: contentType, size: file.size })
+    .post(signUrl, { ...body, filename: file.name, content_type: contentType, size: file.size })
     .then((r) => r.data as { key: string; upload_url: string; content_type: string });
   const put = await fetch(signed.upload_url, { method: "PUT", headers: { "Content-Type": signed.content_type }, body: file }).catch(() => null);
   if (!put?.ok) throw new Error("The file didn't reach storage. Check the connection and try again.");
-  return api.post(documentsUrl, { kind, file_key: signed.key, original_name: file.name, ...extra });
+  return signed.key;
+}
+
+async function uploadDocument(documentsUrl: string, kind: string, file: File, extra: Record<string, string> = {}) {
+  const key = await putToStorage(`${documentsUrl}sign/`, file, { kind });
+  return api.post(documentsUrl, { kind, file_key: key, original_name: file.name, ...extra });
+}
+
+/** A parent's or guardian's photo: straight to storage; the key saves with the guardians section */
+export function useUploadGuardianPhoto() {
+  return useMutation<string, Error, File>({ mutationFn: (file) => putToStorage("/admission/me/photos/sign/", file) });
 }
 
 /** Uploads (or replaces) one document on a child's application */

@@ -53,7 +53,7 @@ export function WhereYouAre({ admission }: { admission: Admission }) {
                       "h-1.5 flex-1 rounded-full",
                       state === "done" && "bg-primary",
                       state === "current" && "bg-primary/60",
-                      (state === "upcoming" || state === "closed") && "bg-muted-foreground/20"
+                      (state === "upcoming" || state === "closed" || state === "skipped") && "bg-muted-foreground/20"
                     )}
                   />
                 );

@@ -15,6 +15,7 @@ import {
   isEnded,
   JOURNEY_PARTS,
   JOURNEY_STEPS,
+  skippedNote,
   TOTAL_STEPS,
   type JourneyStep,
   type StepState,
@@ -70,6 +71,7 @@ export function JourneyList({ admission }: { admission: Admission }) {
                   key={n}
                   step={JOURNEY_STEPS[n - 1]}
                   state={getStepState(n, admission)}
+                  skippedNote={skippedNote(admission)}
                   next={!isEnded(admission) && n === admission.currentStep + 1}
                   open={openStep === n}
                   onToggle={() => setOpenStep(openStep === n ? null : n)}
@@ -145,7 +147,7 @@ function Hero({ admission, step }: { admission: Admission; step: JourneyStep }) 
   );
 }
 
-function StepCard({ step, state, next, open, onToggle }: { step: JourneyStep; state: StepState; next: boolean; open: boolean; onToggle: () => void }) {
+function StepCard({ step, state, skippedNote, next, open, onToggle }: { step: JourneyStep; state: StepState; skippedNote: string; next: boolean; open: boolean; onToggle: () => void }) {
   const bodyId = `step-${step.number}-body`;
   // Help page, with this step's checklist opened
   const needsButton = (
@@ -208,10 +210,14 @@ function StepCard({ step, state, next, open, onToggle }: { step: JourneyStep; st
               </Link>
             ) : (
               <p className="text-sm text-muted-foreground">
-                {state === "closed" ? "This step won't open for this application." : `Opens once step ${step.number - 1} is complete.`}
+                {state === "skipped"
+                  ? `${skippedNote}. After the visit, the application goes straight to review.`
+                  : state === "closed"
+                    ? "This step won't open for this application."
+                    : `Opens once step ${step.number - 1} is complete.`}
               </p>
             )}
-            {state !== "done" && state !== "closed" && needsButton}
+            {state !== "done" && state !== "closed" && state !== "skipped" && needsButton}
           </div>
 
         </div>
@@ -232,6 +238,7 @@ function StatePill({ state, next }: { state: StepState; next: boolean }) {
     );
   const pill = "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold";
   if (state === "current") return <span className={cn(pill, "bg-primary/10 text-primary")}>You are here</span>;
+  if (state === "skipped") return <span className={cn(pill, "border bg-muted text-muted-foreground")}>Not needed</span>;
   if (next) return <span className={cn(pill, "border bg-muted text-muted-foreground")}>Up next</span>;
   return (
     <span className={cn(pill, "border bg-muted text-muted-foreground")}>

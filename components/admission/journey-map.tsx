@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CheckIcon, LockIcon } from "lucide-react";
+import { CheckIcon, LockIcon, MinusIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   canOpenStep,
@@ -94,7 +94,7 @@ function Route({ steps }: { steps: Stop[] }) {
     return {
       i,
       d: `M ${x1} ${y1} C ${x1} ${y1 + bend}, ${x2} ${y2 - bend}, ${x2} ${y2}`,
-      reached: steps[i + 1].state === "done" || steps[i + 1].state === "current",
+      reached: steps[i + 1].state === "done" || steps[i + 1].state === "current" || steps[i + 1].state === "skipped",
     };
   });
   // Stub from the first part sign down to step 1
@@ -162,7 +162,7 @@ function StepStop({ step, i, state }: Stop) {
         state === "done" && "bg-primary text-primary-foreground shadow-xl shadow-primary/35",
         state === "current" && "bg-card text-primary shadow-xl shadow-primary/25 ring-[3px] ring-primary",
         state === "upcoming" && "border-2 border-dashed border-navy-ink/20 bg-card/70 text-navy-ink/35 backdrop-blur",
-        state === "closed" && "bg-muted text-muted-foreground"
+        (state === "closed" || state === "skipped") && "bg-muted text-muted-foreground"
       )}
     >
       {/* The page's one ambient motion: the current stop breathes */}
@@ -173,6 +173,8 @@ function StepStop({ step, i, state }: Stop) {
         <CheckIcon className="size-8" strokeWidth={2.75} />
       ) : state === "closed" ? (
         <LockIcon className="size-6" />
+      ) : state === "skipped" ? (
+        <MinusIcon className="size-6" />
       ) : (
         <Icon className="size-7" strokeWidth={1.75} />
       )}
@@ -198,7 +200,7 @@ function StepStop({ step, i, state }: Stop) {
       <span
         className={cn(
           "absolute max-w-[11rem] -translate-x-1/2 rounded-full px-3.5 py-1.5 text-center text-sm leading-tight font-medium shadow-sm ring-1",
-          state === "upcoming" || state === "closed"
+          state === "upcoming" || state === "closed" || state === "skipped"
             ? "bg-card/70 text-navy-ink/50 ring-navy-ink/10 backdrop-blur"
             : "bg-card text-navy-ink ring-navy-ink/10",
           openable && "group-hover:ring-primary/40"
@@ -256,4 +258,5 @@ const STATE_LABEL: Record<StepState, string> = {
   current: "Current step",
   upcoming: "Not started",
   closed: "Closed",
+  skipped: "Not needed",
 };

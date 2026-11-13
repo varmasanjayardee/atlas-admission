@@ -1,7 +1,7 @@
 "use client";
 
-import { useId } from "react";
-import { CameraIcon, CircleCheckIcon, Loader2Icon, XIcon } from "lucide-react";
+import { useId, useState } from "react";
+import { CameraIcon, CircleCheckIcon, Loader2Icon, UserRoundIcon, XIcon } from "lucide-react";
 import { toast } from "sonner";
 import {
   Combobox,
@@ -21,7 +21,7 @@ import { Input } from "@/components/ui/input";
 import type { FormField, Option } from "@/lib/application-form";
 import { cn } from "@/lib/utils";
 import type { Child } from "@/schemas/auth.schema";
-import { useUploadDocument } from "@/services/admission.service";
+import { useUploadDocument, useUploadGuardianPhoto } from "@/services/admission.service";
 
 const optionOf = (o: Option) =>
   typeof o === "string" ? { value: o, label: o } : o;
@@ -415,6 +415,86 @@ export function FileInput({
           }}
         />
       </label>
+      {field.help && <FieldDescription>{field.help}</FieldDescription>}
+    </Field>
+  );
+}
+
+/** A parent's or guardian's photo: uploads on pick; the form saves its key with the row */
+export function PhotoInput({
+  field,
+  value,
+  savedUrl,
+  onChange,
+  disabled,
+}: {
+  field: FormField;
+  value: string;
+  savedUrl: string | null;
+  onChange: (key: string) => void;
+  disabled?: boolean;
+}) {
+  const id = useId();
+  const upload = useUploadGuardianPhoto();
+  // What they just picked, shown until the section is saved
+  const [preview, setPreview] = useState<string | null>(null);
+  const src = (value && preview) || savedUrl;
+
+  const onFile = (file: File | undefined) => {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) return toast.error("Choose a JPG or PNG photo.");
+    if (file.size > 10 * 1024 * 1024) return toast.error("The photo is larger than 10 MB.");
+    upload.mutate(file, {
+      onSuccess: (key) => {
+        setPreview(URL.createObjectURL(file));
+        onChange(key);
+      },
+      onError: (e) => toast.error(e.message),
+    });
+  };
+
+  return (
+    <Field>
+      <FieldLabel htmlFor={id}>{field.label}</FieldLabel>
+      <div className="flex items-center gap-4">
+        <span className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted text-muted-foreground">
+          {upload.isPending ? (
+            <Loader2Icon className="size-5 animate-spin" />
+          ) : src ? (
+            // eslint-disable-next-line @next/next/no-img-element -- a presigned or local blob URL, not an optimisable asset
+            <img src={src} alt="" className="size-full object-cover" />
+          ) : (
+            <UserRoundIcon className="size-7" />
+          )}
+        </span>
+        <div className="flex flex-wrap gap-2">
+          <label
+            className={cn(
+              "inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3.5 py-2 text-sm font-medium has-focus-visible:ring-3 has-focus-visible:ring-ring/50",
+              (disabled || upload.isPending) && "cursor-not-allowed opacity-60",
+            )}
+          >
+            <CameraIcon className="size-4" />
+            {value ? "Change photo" : "Add a photo"}
+            <input
+              id={id}
+              type="file"
+              accept="image/jpeg,image/png"
+              className="sr-only"
+              disabled={disabled || upload.isPending}
+              onChange={(e) => {
+                onFile(e.target.files?.[0]);
+                e.target.value = "";
+              }}
+            />
+          </label>
+          {value && !disabled && (
+            <button type="button" onClick={() => onChange("")} className="rounded-full px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground">
+              Remove
+            </button>
+          )}
+        </div>
+      </div>
       {field.help && <FieldDescription>{field.help}</FieldDescription>}
     </Field>
   );

@@ -7,7 +7,7 @@ import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerTitle } fr
 import { StepContent } from "@/components/admission/steps";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useStepParam } from "@/hooks/use-step-param";
-import { canOpenStep, getStepState, JOURNEY_STEPS, TOTAL_STEPS, type StepState } from "@/lib/journey";
+import { canOpenStep, getStepState, JOURNEY_STEPS, nextStepNumber, TOTAL_STEPS, type StepState } from "@/lib/journey";
 import type { Admission } from "@/types/admission.types";
 
 export const STATE_BADGE: Record<StepState, { label: string; variant: "default" | "secondary" | "outline" }> = {
@@ -15,6 +15,7 @@ export const STATE_BADGE: Record<StepState, { label: string; variant: "default" 
   current: { label: "In progress", variant: "default" },
   upcoming: { label: "Not started", variant: "outline" },
   closed: { label: "Closed", variant: "outline" },
+  skipped: { label: "Not needed", variant: "outline" },
 };
 
 /** Bottom sheet on mobile, right-hand panel on desktop; the open step comes from ?step= */
@@ -30,7 +31,7 @@ export function StepDrawer({ admission }: { admission: Admission }) {
   if (open && requestedStep !== shown) setShown(requestedStep);
 
   const state = shown && getStepState(shown.number, admission);
-  const goNext = () => setStep(shown && shown.number < TOTAL_STEPS ? shown.number + 1 : null);
+  const goNext = () => setStep((shown && nextStepNumber(shown.number, admission)) ?? null);
 
   return (
     <Drawer
