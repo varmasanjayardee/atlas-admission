@@ -22,17 +22,17 @@ export function SignInForm({ isSending, onSubmit, onNewEnquiry }: { isSending: b
   return (
     <form onSubmit={handleSubmit(({ identifier }) => onSubmit(identifier.trim()))} noValidate className="flex flex-col">
       <h1 className="font-serif text-5xl leading-[1.1] italic sm:text-6xl">Welcome back.</h1>
-      <p className="mt-6 text-lg leading-relaxed text-white/90">Enter the email or mobile number on your enquiry. We&apos;ll send you a 6-digit code.</p>
+      <p className="mt-6 text-lg leading-relaxed text-white/90">Enter the email on your enquiry. We&apos;ll send you a 6-digit code.</p>
 
       <Field data-invalid={!!error} className="mt-10">
         <FieldLabel htmlFor="identifier" className="text-white">
-          Email or mobile number
+          Email
         </FieldLabel>
         <Input
           id="identifier"
           autoFocus
           autoComplete="username"
-          placeholder="you@example.com or +91 98100 41122"
+          placeholder="you@example.com"
           aria-invalid={!!error}
           className="h-14 rounded-xl border-0 bg-card px-4 text-base text-card-foreground"
           {...register("identifier", { validate: zodRule(identifierSchema) })}
