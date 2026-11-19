@@ -4,14 +4,14 @@ import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { format, parseISO } from "date-fns";
 import { toast } from "sonner";
-import { CircleAlertIcon, CircleCheckIcon, ClockIcon, CopyIcon, LandmarkIcon, Loader2Icon, LockIcon } from "lucide-react";
+import { CalendarXIcon, CircleAlertIcon, CircleCheckIcon, ClockIcon, CopyIcon, LandmarkIcon, Loader2Icon, LockIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { feeNote, formatCurrency } from "@/lib/format";
 import { JOURNEY_STEPS } from "@/lib/journey";
 import { site } from "@/lib/site";
 import { cn } from "@/lib/utils";
 import type { ChildFees, Payment } from "@/schemas/auth.schema";
-import { useChildFees, useRefreshPayment, useSendReceipt, useStartPayment, type ReceiptMethod } from "@/services/admission.service";
+import { useChildFees, useChildSlots, useRefreshPayment, useSendReceipt, useStartPayment, type ReceiptMethod } from "@/services/admission.service";
 import { StepBody, StepFooter, StepSection, type StepContentProps } from "./step-layout";
 
 type Kind = Payment["kind"];
@@ -59,7 +59,12 @@ export function FeeStep({ admission, step, state, goNext, kind }: StepContentPro
   const following = JOURNEY_STEPS[step.number];
   // Two ways to pay: manual (bank transfer or UPI, then the receipt) first; online opens if they last tried it
   const [tab, setTab] = useState<"manual" | "online">(!ONLINE_LOCKED && latest && latest.gateway !== "receipt" ? "online" : "manual");
-  const choosing = !paid && !checking && !confirming && !!group?.items.length;
+  const due = !paid && !checking && !confirming && !!group?.items.length;
+  // The registration fee only unlocks visit booking: with every slot full (or none), don't take it yet.
+  // If the slots can't be loaded, payment stays open rather than blocking the family.
+  const slots = useChildSlots(child.id, kind === "registration" && due);
+  const noSlots = kind === "registration" && !!slots.data && !slots.data.some((slot) => slot.places_left > 0);
+  const choosing = due && (kind !== "registration" || !!slots.data || slots.isError) && !noSlots;
 
   const chip = paid
     ? { label: "Paid", tone: "bg-green-400/20 text-green-100 ring-green-300/40", icon: CircleCheckIcon }
@@ -190,6 +195,16 @@ export function FeeStep({ admission, step, state, goNext, kind }: StepContentPro
           )}
         </StepSection>
 
+        {due && noSlots && (
+          <p className="flex items-start gap-3 rounded-xl bg-amber-50 p-4 text-sm text-amber-900 dark:bg-amber-400/10 dark:text-amber-100" role="status">
+            <CalendarXIcon className="mt-0.5 size-4 shrink-0" />
+            <span>
+              <span className="block font-semibold">No slot available for any date</span>
+              Every visit slot is full right now, so the registration fee can&apos;t be paid yet. Please check back soon, or call {site.helpLine}.
+            </span>
+          </p>
+        )}
+
         {choosing && (
           <StepSection title="How you'll pay">
             <div role="tablist" aria-label="How you'll pay" className="grid grid-cols-2 gap-1 rounded-xl bg-muted p-1">
@@ -248,6 +263,7 @@ export function FeeStep({ admission, step, state, goNext, kind }: StepContentPro
             </Button>
           ) : (
             !paid &&
+            !noSlots &&
             // Manual payment sends its receipt from its own form
             !(choosing && tab === "manual") && (
               <>
