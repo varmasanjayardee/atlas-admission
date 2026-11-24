@@ -69,7 +69,7 @@ function timeline(child: Child): Node[] {
 
   return [
     { title: "Application submitted", detail: when(doneAt(1)), state: "done" },
-    { title: "Registration fee paid", detail: when(doneAt(2)), state: "done" },
+    { title: "Application fee paid", detail: when(doneAt(2)), state: "done" },
     { title: "Campus visit booked", detail: when(doneAt(3)), state: "done" },
     { title: "Visited the campus", detail: when(doneAt(4)), state: "done" },
     // Applications reviewed before the test step existed skipped it
@@ -115,7 +115,7 @@ export function ReviewStep({ admission, goNext }: StepContentProps) {
           <h3 className="mt-3 text-xl leading-snug font-bold tracking-tight">{decision.title(name)}</h3>
           <p className="mt-1 text-sm opacity-90">{decision.body}</p>
           {child.review_note && (
-            <blockquote className="mt-4 border-l-2 border-current/30 pl-3 text-sm italic">{child.review_note}</blockquote>
+            <blockquote className="mt-4 border-l-2 border-current/30 pl-3 text-sm whitespace-pre-line">{child.review_note}</blockquote>
           )}
         </section>
 

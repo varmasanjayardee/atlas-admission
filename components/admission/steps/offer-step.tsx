@@ -66,7 +66,7 @@ export function OfferStep({ admission, goNext }: StepContentProps) {
                   </>
                 )}
               </p>
-              {child.review_note && <p className="italic">{child.review_note}</p>}
+              {child.review_note && <p className="whitespace-pre-line">{child.review_note}</p>}
             </div>
             <p className="mt-5 font-serif text-lg text-navy-ink italic">Admissions, {site.school}</p>
             <p className="mt-4 border-t pt-3 text-xs text-muted-foreground">
@@ -97,7 +97,7 @@ export function OfferStep({ admission, goNext }: StepContentProps) {
               )}
               {registrationPaid && (
                 <div className="flex justify-between gap-4 py-3 text-sm">
-                  <dt className="text-muted-foreground">Registration fee</dt>
+                  <dt className="text-muted-foreground">Application fee</dt>
                   <dd className="font-medium text-green-700">Paid · {formatCurrency(registrationPaid.amount)}</dd>
                 </div>
               )}

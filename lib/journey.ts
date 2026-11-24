@@ -47,10 +47,10 @@ export const JOURNEY_STEPS: JourneyStep[] = [
   },
   {
     number: 2,
-    title: "Registration fee",
-    description: "Pay the registration fee set by your admission counsellor",
+    title: "Application fee",
+    description: "Pay the application fee set by your admission counsellor",
     icon: WalletIcon,
-    action: { title: "Pay the registration fee", cta: "Pay" },
+    action: { title: "Pay the application fee", cta: "Pay" },
     details: ["The amount comes from the fee plan for your campus, academic year and grade.", "Pay online on ICICI Bank's secure page.", "This step completes as soon as the payment clears."],
     needs: ["UPI, a debit or credit card, or net banking", "Your phone, for the bank's one-time password"],
   },

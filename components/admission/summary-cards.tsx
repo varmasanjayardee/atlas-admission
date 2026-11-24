@@ -56,14 +56,14 @@ export function CounsellorCard({ counsellor }: { counsellor: Counsellor | null }
   );
 }
 
-/** The registration fee from the child's fee plan, once there is a child and a plan */
+/** The application fee from the child's fee plan, once there is a child and a plan */
 export function FeeCard({ childId }: { childId: number | undefined }) {
   const fees = useChildFees(childId);
   const total = fees.data?.registration.total;
 
   return (
     <section className={card}>
-      <h3 className={label}>Registration fee</h3>
+      <h3 className={label}>Application fee</h3>
       {total && Number(total) ? (
         <>
           <p className="mt-auto pt-6 text-3xl font-bold tracking-tight tabular-nums">{formatCurrency(total)}</p>

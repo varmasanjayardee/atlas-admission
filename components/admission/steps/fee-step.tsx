@@ -18,7 +18,7 @@ type Kind = Payment["kind"];
 
 // What each journey fee is for, in the family's words
 const COPY: Record<Kind, { title: string; purpose: (name: string) => string }> = {
-  registration: { title: "Registration fee", purpose: () => "Unlocks visit booking" },
+  registration: { title: "Application fee", purpose: () => "Unlocks visit booking" },
   admission: { title: "Admission fee", purpose: (name) => `Confirms ${name}'s place` },
 };
 
@@ -60,7 +60,7 @@ export function FeeStep({ admission, step, state, goNext, kind }: StepContentPro
   // Two ways to pay: manual (bank transfer or UPI, then the receipt) first; online opens if they last tried it
   const [tab, setTab] = useState<"manual" | "online">(!ONLINE_LOCKED && latest && latest.gateway !== "receipt" ? "online" : "manual");
   const due = !paid && !checking && !confirming && !!group?.items.length;
-  // The registration fee only unlocks visit booking: with every slot full (or none), don't take it yet.
+  // The application fee only unlocks visit booking: with every slot full (or none), don't take it yet.
   // If the slots can't be loaded, payment stays open rather than blocking the family.
   const slots = useChildSlots(child.id, kind === "registration" && due);
   const noSlots = kind === "registration" && !!slots.data && !slots.data.some((slot) => slot.places_left > 0);
@@ -200,7 +200,7 @@ export function FeeStep({ admission, step, state, goNext, kind }: StepContentPro
             <CalendarXIcon className="mt-0.5 size-4 shrink-0" />
             <span>
               <span className="block font-semibold">No slot available for any date</span>
-              Every visit slot is full right now, so the registration fee can&apos;t be paid yet. Please check back soon, or call {site.helpLine}.
+              Every visit slot is full right now, so the application fee can&apos;t be paid yet. Please check back soon, or call {site.helpLine}.
             </span>
           </p>
         )}
@@ -246,7 +246,7 @@ export function FeeStep({ admission, step, state, goNext, kind }: StepContentPro
           <StepSection title="Around it">
             <dl className="divide-y rounded-xl bg-muted/50 px-4 text-sm">
               <div className="flex justify-between gap-4 py-3">
-                <dt className="text-muted-foreground">Registration fee, already paid</dt>
+                <dt className="text-muted-foreground">Application fee, already paid</dt>
                 <dd className="font-medium text-green-700 tabular-nums">{formatCurrency(registrationPaid.amount)}</dd>
               </div>
             </dl>

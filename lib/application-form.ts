@@ -81,15 +81,16 @@ const YES_NO = [
 ];
 /** Every grade, in order; same as GRADE_LABEL/GRADE_STAGE in keyed-backend admission/models.py. Each campus admits some of them (`campus.grades`) */
 export const GRADES = [
-  { value: "Early NIDO/NIDO", label: "Early NIDO/NIDO (8 to 18 months)", stage: "Early Years" },
+  { value: "Early NIDO", label: "Early NIDO (8 to 12 months)", stage: "Early Years" },
+  { value: "NIDO", label: "NIDO (12 to 18 months)", stage: "Early Years" },
   { value: "Red", label: "Red (2+ years)", stage: "Early Years" },
   { value: "Blue", label: "Blue (3+ years)", stage: "Early Years" },
   { value: "Yellow", label: "Yellow (4+ years)", stage: "Early Years" },
   { value: "EYFS", label: "EYFS (5+ years)", stage: "Early Years" },
-  ...Array.from({ length: 10 }, (_, i) => ({
+  ...Array.from({ length: 12 }, (_, i) => ({
     value: `Year ${i + 1}`,
     label: `Year ${i + 1}`,
-    stage: i < 6 ? "Primary" : i < 9 ? "Lower Secondary" : "Upper Secondary (IGCSE)",
+    stage: i < 6 ? "Primary" : i < 9 ? "Lower Secondary" : i < 11 ? "Upper Secondary (IGCSE)" : "Advanced (AS & A Level)",
   })),
 ];
 
