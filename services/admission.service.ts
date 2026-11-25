@@ -268,7 +268,7 @@ export function useGateCheck(action: "lookup" | "approve") {
 export const DECLINE_REASONS = ["Chose another school", "Relocating", "Fees", "Timing", "Prefer not to say"] as const;
 
 type OfferAnswer =
-  | { action: "accept"; agreed: true }
+  | { action: "accept"; agreed: true; terms_accepted: true }
   | { action: "extend" }
   | { action: "decline"; reason: (typeof DECLINE_REASONS)[number] };
 

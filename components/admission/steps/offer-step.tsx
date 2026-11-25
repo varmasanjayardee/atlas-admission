@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { differenceInCalendarDays, differenceInHours, format, parseISO } from "date-fns";
-import { CalendarClockIcon, CircleCheckIcon, CircleXIcon, Loader2Icon, ShieldCheckIcon, WalletIcon } from "lucide-react";
+import { CalendarClockIcon, CircleCheckIcon, CircleXIcon, FileTextIcon, Loader2Icon, ShieldCheckIcon, WalletIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { feeNote, formatCurrency } from "@/lib/format";
@@ -16,12 +16,16 @@ import { StepBody, StepFooter, StepSection, type StepContentProps } from "./step
 const long = (iso: string) => format(parseISO(iso), "EEEE d MMMM yyyy");
 const short = (iso: string) => format(parseISO(iso), "d MMM yyyy");
 
+const EXTRA_CHARGES =
+  "Extra charges will be invoiced on account of PSA Fee (One time), Class Photograph (One time), RFID Tag, Security & Safety Charges (One time), Meal Fee, ATLAS Fee, After School Enrichment Programme, Swimming (If availed) & Transport Fees (If availed).";
+
 /** Step 7: the offer letter, its fees, and accept / extend / decline */
 export function OfferStep({ admission, goNext }: StepContentProps) {
   const child = admission.child!;
   const fees = useChildFees(child.id);
   const answer = useAnswerOffer(child.id);
   const [agreed, setAgreed] = useState(false);
+  const [terms, setTerms] = useState(false);
   const [declining, setDeclining] = useState(false);
   const [reason, setReason] = useState<(typeof DECLINE_REASONS)[number] | "">("");
   // When the drawer opened; good enough for a countdown measured in days
@@ -108,6 +112,31 @@ export function OfferStep({ admission, goNext }: StepContentProps) {
           )}
         </StepSection>
 
+        <StepSection title="Terms and conditions">
+          <div className="space-y-3 text-sm">
+            {child.offer_terms_url && (
+              <a
+                href={child.offer_terms_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 rounded-xl border p-4 font-medium text-primary outline-none hover:bg-muted/50 focus-visible:ring-3 focus-visible:ring-ring/50"
+              >
+                <FileTextIcon className="size-5 shrink-0" />
+                Read the terms and conditions (PDF)
+              </a>
+            )}
+            <p className="rounded-xl bg-muted/50 p-4 leading-relaxed text-muted-foreground">
+              <strong className="text-foreground">Note:</strong> {EXTRA_CHARGES}
+            </p>
+            {child.terms_accepted_at && (
+              <p className="flex items-center gap-2 font-medium text-green-700">
+                <CircleCheckIcon className="size-4 shrink-0" />
+                Accepted on {short(child.terms_accepted_at)}
+              </p>
+            )}
+          </div>
+        </StepSection>
+
         <StepSection title="What accepting means">
           <ul className="space-y-3 text-sm">
             {[
@@ -169,11 +198,25 @@ export function OfferStep({ admission, goNext }: StepContentProps) {
               <input type="checkbox" className="mt-0.5 size-4 accent-[var(--primary)]" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
               I&apos;ve read the offer and what accepting means.
             </label>
+            <label className="flex items-start gap-3 text-sm">
+              <input type="checkbox" className="mt-0.5 size-4 accent-[var(--primary)]" checked={terms} onChange={(e) => setTerms(e.target.checked)} />
+              <span>
+                I accept the{" "}
+                {child.offer_terms_url ? (
+                  <a href={child.offer_terms_url} target="_blank" rel="noopener noreferrer" className="font-medium text-primary underline">
+                    terms and conditions
+                  </a>
+                ) : (
+                  "terms and conditions"
+                )}
+                .
+              </span>
+            </label>
             <Button
               size="lg"
               className="h-12 rounded-xl text-base font-semibold"
-              disabled={!agreed || answer.isPending}
-              onClick={() => send({ action: "accept", agreed: true }, `Offer accepted. Welcome to ${site.school}!`)}
+              disabled={!agreed || !terms || answer.isPending}
+              onClick={() => send({ action: "accept", agreed: true, terms_accepted: true }, `Offer accepted. Welcome to ${site.school}!`)}
             >
               {answer.isPending && <Loader2Icon className="animate-spin" />}
               Accept offer

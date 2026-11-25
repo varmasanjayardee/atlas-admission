@@ -213,6 +213,9 @@ export const childSchema = z.object({
   offer_sent_at: z.string().nullable(),
   offer_expires_at: z.string().nullable(),
   offer_extended_at: z.string().nullable(),
+  // Optional until every backend sends them
+  terms_accepted_at: z.string().nullish(),
+  offer_terms_url: z.string().nullish(),
   offer_accepted_at: z.string().nullable(),
   offer_declined_at: z.string().nullable(),
   offer_decline_reason: z.string(),
