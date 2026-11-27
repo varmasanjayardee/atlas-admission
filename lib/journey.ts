@@ -164,11 +164,20 @@ export type StepState = "done" | "current" | "upcoming" | "closed" | "skipped";
 export const APTITUDE_TEST_STEP = 5;
 const testSkipped = (admission: Admission) =>
   admission.child?.needs_aptitude_test === false || (admission.currentStep > APTITUDE_TEST_STEP && !admission.child?.aptitude_test_at);
-export const skippedNote = (admission: Admission) =>
-  admission.child?.needs_aptitude_test === false ? "Not needed for Early Years" : "Your counsellor decided a test isn't needed";
+/** No Atlas account below Year 6: steps 10-11 never happen and step 9 ends the journey */
+export const JOINING_STEP = 9;
+export const noAtlasAccount = (admission: Admission) => admission.child?.needs_atlas_account === false;
+/** Joined: no Atlas account to wait for, and step 9 is done */
+export const joinedWithoutAtlas = (admission: Admission) => noAtlasAccount(admission) && admission.currentStep > JOINING_STEP;
+
+export const skippedNote = (admission: Admission, step: number) =>
+  step > JOINING_STEP
+    ? "Atlas accounts are for Year 6 to Year 12 only. The journey finishes with the joining form."
+    : `${admission.child?.needs_aptitude_test === false ? "Not needed for Early Years" : "Your counsellor decided a test isn't needed"}. After the visit, the application goes straight to review.`;
 
 export function getStepState(step: number, admission: Admission): StepState {
   if (step === APTITUDE_TEST_STEP && testSkipped(admission)) return "skipped";
+  if (step > JOINING_STEP && noAtlasAccount(admission)) return "skipped";
   // Not offered or withdrawn: the journey stops where it is and later steps never open
   const ended = isEnded(admission);
   if (ended && step >= admission.currentStep) return "closed";
@@ -188,5 +197,6 @@ export function nextStepNumber(number: number, admission: Admission): number | u
 export const canOpenStep = (state: StepState) => state === "done" || state === "current";
 
 export function getCurrentStep(admission: Admission) {
-  return JOURNEY_STEPS[Math.min(Math.max(admission.currentStep, 1), TOTAL_STEPS) - 1];
+  const last = noAtlasAccount(admission) ? JOINING_STEP : TOTAL_STEPS;
+  return JOURNEY_STEPS[Math.min(Math.max(admission.currentStep, 1), last) - 1];
 }

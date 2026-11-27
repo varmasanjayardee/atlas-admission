@@ -201,6 +201,8 @@ export const childSchema = z.object({
   current_step: z.number(),
   /** False for Early Years: step 5 (aptitude test) is skipped. Defaults to true until the backend sends it */
   needs_aptitude_test: z.boolean().default(true),
+  /** Year 6 to 12 only: steps 10-11 (Atlas account). False finishes the journey at step 9 (current_step jumps to 11) */
+  needs_atlas_account: z.boolean().default(true),
   /**
    * Step 6 review: pending = in review, waitlisted, offered = accepted, rejected, not_offered.
    * Step 7 answer: declined, or withdrawn when the offer expired.

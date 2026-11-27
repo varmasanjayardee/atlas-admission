@@ -19,6 +19,7 @@ import {
   TOTAL_STEPS,
   type JourneyStep,
   type StepState,
+  joinedWithoutAtlas,
 } from "@/lib/journey";
 import type { Admission } from "@/types/admission.types";
 
@@ -71,7 +72,7 @@ export function JourneyList({ admission }: { admission: Admission }) {
                   key={n}
                   step={JOURNEY_STEPS[n - 1]}
                   state={getStepState(n, admission)}
-                  skippedNote={skippedNote(admission)}
+                  skippedNote={skippedNote(admission, n)}
                   next={!isEnded(admission) && n === admission.currentStep + 1}
                   open={openStep === n}
                   onToggle={() => setOpenStep(openStep === n ? null : n)}
@@ -88,6 +89,7 @@ export function JourneyList({ admission }: { admission: Admission }) {
 function Hero({ admission, step }: { admission: Admission; step: JourneyStep }) {
   const p = partIndexOf(step.number);
   const ended = endedTitle(admission);
+  const joined = joinedWithoutAtlas(admission);
   const Icon = step.icon;
 
   return (
@@ -100,7 +102,7 @@ function Hero({ admission, step }: { admission: Admission; step: JourneyStep }) 
           Step {step.number}
           <span className="ml-2 text-2xl font-medium tracking-normal text-muted-foreground">of {TOTAL_STEPS}</span>
         </p>
-        <h1 className="mt-3 text-3xl font-bold tracking-tight text-balance sm:text-4xl">{ended ?? step.action.title}</h1>
+        <h1 className="mt-3 text-3xl font-bold tracking-tight text-balance sm:text-4xl">{ended ?? (joined ? `Congratulations, ${admission.child?.first_name} is all set to join` : step.action.title)}</h1>
         <p className="mt-2 text-muted-foreground">
           {step.title} · Enquiry made on {format(parseISO(admission.enquiryDate), "d MMMM yyyy")}
         </p>
@@ -126,7 +128,7 @@ function Hero({ admission, step }: { admission: Admission; step: JourneyStep }) 
         </div>
       </div>
 
-      {!ended && (
+      {!ended && !joined && (
         <div className="flex flex-wrap items-center gap-4 rounded-2xl bg-primary p-6 text-primary-foreground shadow-xl shadow-primary/25">
           <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-primary-foreground/15">
             <Icon className="size-6" />
@@ -211,7 +213,7 @@ function StepCard({ step, state, skippedNote, next, open, onToggle }: { step: Jo
             ) : (
               <p className="text-sm text-muted-foreground">
                 {state === "skipped"
-                  ? `${skippedNote}. After the visit, the application goes straight to review.`
+                  ? skippedNote
                   : state === "closed"
                     ? "This step won't open for this application."
                     : `Opens once step ${step.number - 1} is complete.`}

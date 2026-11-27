@@ -5,6 +5,7 @@ import { differenceInCalendarDays, format, parseISO } from "date-fns";
 import {
   BusIcon,
   CalendarHeartIcon,
+  CheckIcon,
   CircleAlertIcon,
   CircleCheckIcon,
   ClockIcon,
@@ -17,7 +18,7 @@ import {
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { formatIdentifier } from "@/lib/format";
-import { JOURNEY_STEPS } from "@/lib/journey";
+import { JOURNEY_STEPS, joinedWithoutAtlas, noAtlasAccount } from "@/lib/journey";
 import { site } from "@/lib/site";
 import { cn } from "@/lib/utils";
 import type { Child, Lead, Requirement } from "@/schemas/auth.schema";
@@ -43,6 +44,9 @@ const CHECKPOINTS = [
   { days: 14, label: "7 to 14 days", what: "Final instructions" },
 ];
 
+// Asked for, never required: they don't hold up step 9 (OPTIONAL_JOINING_DOCUMENTS in keyed-backend)
+const OPTIONAL_DOCUMENTS = ["transfer_certificate", "medical_record"];
+
 /** Step 9: the before-joining checklist; done when every item that needs the family is */
 export function JoiningStep({ admission, state, goNext }: StepContentProps) {
   const child = admission.child!;
@@ -50,18 +54,33 @@ export function JoiningStep({ admission, state, goNext }: StepContentProps) {
   const items = child.requirements;
   const done = items.filter((r) => r.status === "done").length;
   const percent = items.length ? Math.round((done / items.length) * 100) : 0;
-  const mine = items.filter((r) => r.owner === "parent" && r.status !== "done");
+  const mine = items.filter((r) => r.owner === "parent" && r.status !== "done" && !OPTIONAL_DOCUMENTS.includes(r.document_kind));
   // Uploads have their own Documents section; this list is what to confirm
   const toConfirm = mine.filter((r) => r.action !== "upload");
   const pendingUploads = mine.filter((r) => r.action === "upload");
   // Finished uploads show under Documents instead
   const others = items.filter((r) => r.owner !== "parent" || (r.status === "done" && r.action !== "upload"));
   const daysToGo = child.joining_date ? differenceInCalendarDays(parseISO(child.joining_date), today) : null;
-  const following = JOURNEY_STEPS[9];
+  // Below Year 6 there's no Atlas account: step 9 done is the end of the journey
+  const following = noAtlasAccount(admission) ? undefined : JOURNEY_STEPS[9];
+  const joined = joinedWithoutAtlas(admission);
 
   return (
     <>
       <StepBody>
+        {joined && (
+          <section className="flex flex-col items-center rounded-2xl bg-navy px-6 py-8 text-center text-white">
+            <span className="flex size-16 items-center justify-center rounded-full bg-green-500 shadow-[0_0_0_8px_rgb(34_197_94/0.2)] transition-transform duration-500 ease-[cubic-bezier(0.2,0.9,0.3,1.3)] starting:scale-0 motion-reduce:transition-none">
+              <CheckIcon className="size-8" strokeWidth={3} />
+            </span>
+            <h3 className="mt-4 font-serif text-3xl italic">Congratulations!</h3>
+            <p className="mt-1 text-sm text-white/75">
+              Welcome to {site.school}, {child.first_name}.
+              {child.joining_date && ` We look forward to seeing you on ${format(parseISO(child.joining_date), "EEEE d MMMM yyyy")}.`}
+            </p>
+          </section>
+        )}
+
         <section className="flex items-center gap-4 rounded-2xl bg-muted/60 p-4">
           <ProgressRing value={percent} />
           <div className="min-w-0">
@@ -179,7 +198,9 @@ export function JoiningStep({ admission, state, goNext }: StepContentProps) {
               ? `${mine.length} thing${mine.length === 1 ? "" : "s"} left for you. Questions? Call ${site.helpLine}`
               : child.joining_date
                 ? "All done on your side."
-                : "All done on your side. Your Atlas account is set up once admissions confirms the joining date."}
+                : noAtlasAccount(admission)
+                  ? "All done on your side. Admissions will confirm the joining date."
+                  : "All done on your side. Your Atlas account is set up once admissions confirms the joining date."}
           </p>
         )}
       </StepFooter>

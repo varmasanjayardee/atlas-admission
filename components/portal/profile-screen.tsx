@@ -153,7 +153,7 @@ function Children({ lead }: { lead: Lead }) {
             <div className="min-w-0 flex-1">
               <p className="truncate font-medium">{`${c.first_name} ${c.last_name}`.trim()}</p>
               <p className="text-sm text-muted-foreground">
-                {[c.grade, `Step ${Math.min(c.current_step, TOTAL_STEPS)} of ${TOTAL_STEPS}: ${JOURNEY_STEPS[Math.min(c.current_step, TOTAL_STEPS) - 1].title}`].filter(Boolean).join(" · ")}
+                {[c.grade, !c.needs_atlas_account && c.current_step > 9 ? "Admission complete" : `Step ${Math.min(c.current_step, TOTAL_STEPS)} of ${TOTAL_STEPS}: ${JOURNEY_STEPS[Math.min(c.current_step, TOTAL_STEPS) - 1].title}`].filter(Boolean).join(" · ")}
               </p>
             </div>
             <Button variant="ghost" size="sm" onClick={() => open(c.id)}>
