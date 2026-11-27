@@ -5,6 +5,7 @@ import type { Values } from "@/lib/application-form";
 import {
   childFeesSchema,
   childSchema,
+  feeReferenceSchema,
   leadSchema,
   paymentSchema,
   slotSchema,
@@ -65,6 +66,16 @@ const campusSchema = z.array(
     grades: z.array(z.object({ value: z.string(), label: z.string() })),
   })
 );
+
+/** The Fees tab: every campus's published admission fees */
+export function useFeeReference() {
+  return useQuery({
+    queryKey: ["fee-reference"],
+    queryFn: () => api.get("/admission/fees/").then((r) => feeReferenceSchema.parse(r.data)),
+    enabled: hasSession(),
+    staleTime: 5 * 60_000,
+  });
+}
 
 /** Campus choices for the application form, each with its open academic years and the grades it admits */
 export function useCampuses() {

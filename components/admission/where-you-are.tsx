@@ -51,7 +51,7 @@ export function WhereYouAre({ admission }: { admission: Admission }) {
                     key={n}
                     className={cn(
                       "h-1.5 flex-1 rounded-full",
-                      state === "done" && "bg-primary",
+                      state === "done" && "bg-green-600",
                       state === "current" && "bg-primary/60",
                       (state === "upcoming" || state === "closed" || state === "skipped") && "bg-muted-foreground/20"
                     )}

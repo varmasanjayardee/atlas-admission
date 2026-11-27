@@ -75,6 +75,33 @@ export const childFeesSchema = z.object({
 
 export type ChildFees = z.infer<typeof childFeesSchema>;
 
+/** GET fees/: every admission campus's published admission fee plans (no registration fee), for the Fees tab */
+export const feeReferenceSchema = z.array(
+  z.object({
+    id: z.number(),
+    name: z.string(),
+    academic_years: z.array(z.object({ id: z.number(), name: z.string() })),
+    grades: z.array(z.object({ value: z.string(), label: z.string() })),
+    /** The campus fee policy PDF; null until the school uploads one */
+    fee_policy_url: z.string().nullable(),
+    plans: z.array(
+      z.object({
+        id: z.number(),
+        academic_year: z.number(),
+        /** "" covers every grade the campus admits */
+        grade: z.string(),
+        terms_per_year: z.number(),
+        year_from: z.string(),
+        year_to: z.string(),
+        items: z.array(feeItemSchema),
+        total: z.string(),
+      })
+    ),
+  })
+);
+
+export type FeeReference = z.infer<typeof feeReferenceSchema>;
+
 /** A campus visit time, as parents see it */
 export const slotSchema = z.object({
   id: z.number(),
@@ -121,6 +148,8 @@ export const visitSchema = z.object({
   campus_address: z.string(),
   /** Presigned campus photo for the ticket's poster; null if the campus has none */
   campus_image: z.string().nullable(),
+  /** The campus's 3D tour, for "Explore in 3D"; null if it has none */
+  campus_vr_link: z.string().nullish(),
   /** QR of the gate pass code, as an SVG data URI */
   gate_pass_qr: z.string(),
   gate_pass_code: z.string(),

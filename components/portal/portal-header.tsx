@@ -22,7 +22,7 @@ export function PortalHeader() {
           {/* SVG: served as is (next/image only optimises raster images) */}
           <Image src="/logo.svg" alt={site.school} width={200} height={41} priority unoptimized className="h-8 w-auto" />
         </span>
-        <span className="hidden border-l pl-3 text-[11px] tracking-[0.1em] text-muted-foreground uppercase sm:block">Admissions</span>
+        {/* <span className="hidden border-l pl-3 text-[11px] tracking-[0.1em] text-muted-foreground uppercase sm:block">Admissions</span> */}
       </Link>
       <p className="mx-auto hidden truncate text-sm text-muted-foreground lg:block">
         {context}

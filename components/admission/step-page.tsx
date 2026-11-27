@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { STATE_BADGE } from "@/components/admission/step-drawer";
 import { StepContent } from "@/components/admission/steps";
 import { useSelectedStudent } from "@/hooks/use-selected-student";
-import { canOpenStep, getStepState, JOURNEY_STEPS, nextStepNumber, TOTAL_STEPS } from "@/lib/journey";
+import { canOpenStep, getStepState, JOURNEY_STEPS, journeyStepCount, nextStepNumber } from "@/lib/journey";
 import { useAdmission } from "@/services/admission.service";
 
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -50,14 +50,14 @@ export function StepPage({ number }: { number: number }) {
       <div className="mt-2 flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-sm text-muted-foreground tabular-nums">
-            Step {pad(step.number)} of {pad(TOTAL_STEPS)}
+            Step {pad(step.number)} of {pad(journeyStepCount(admission))}
           </p>
           <h1 className="mt-1 text-3xl font-bold tracking-tight">{step.title}</h1>
         </div>
-        <Badge variant={STATE_BADGE[state].variant}>{STATE_BADGE[state].label}</Badge>
+        <Badge variant={STATE_BADGE[state].variant} className={STATE_BADGE[state].className}>{STATE_BADGE[state].label}</Badge>
       </div>
 
-      <div className="mt-6 flex flex-col overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/5">
+      <div className="mt-6 flex flex-col overflow-clip max-sm:-mx-4 sm:rounded-2xl sm:bg-card sm:ring-1 sm:ring-foreground/5">
         <StepContent key={step.number} admission={admission} step={step} state={state} goNext={goNext} page />
       </div>
     </div>

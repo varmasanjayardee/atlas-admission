@@ -2,14 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CircleHelpIcon, HouseIcon, LogOutIcon, UserIcon } from "lucide-react";
+import { CircleHelpIcon, HouseIcon, LogOutIcon, UserIcon, WalletIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { site } from "@/lib/site";
 import { useLogout } from "@/services/auth.service";
 
 const NAV_ITEMS = [
   { href: "/", label: "Journey", icon: HouseIcon },
-  { href: "/help", label: "Help", icon: CircleHelpIcon },
+  { href: "/fees", label: "Fees", icon: WalletIcon },
+  { href: "/help", label: "FAQ", icon: CircleHelpIcon },
   { href: "/profile", label: "You", icon: UserIcon },
 ];
 
@@ -67,7 +68,7 @@ export function BottomNav() {
       aria-label="Main"
       className="fixed inset-x-0 bottom-0 z-40 rounded-t-3xl bg-card pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_24px_-8px_oklch(0.2571_0.1161_272.24/0.18)] lg:hidden"
     >
-      <ul className="grid grid-cols-3">
+      <ul className="grid grid-cols-4">
         {NAV_ITEMS.map(({ href, label, icon: Icon }) => (
           <li key={href}>
             <Link

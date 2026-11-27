@@ -33,10 +33,11 @@ export const formatCurrency = (amount: string | number) => inr.format(Number(amo
 const PER = { annual: "a year", term: "a term", monthly: "a month" } as const;
 
 /** Under a fee line: how it's charged, e.g. "₹3,000 a term · optional, not in the total" */
-export function feeNote(item: { amount: string; frequency: "one_time" | keyof typeof PER; is_optional: boolean; is_refundable: boolean }) {
+export function feeNote(item: { label?: string; amount: string; frequency: "one_time" | keyof typeof PER; is_optional: boolean; is_refundable: boolean }) {
   return [
     item.frequency !== "one_time" && `${formatCurrency(item.amount)} ${PER[item.frequency]}`,
-    item.is_refundable && "refundable",
+    // Not when the label already says so ("Refundable deposit")
+    item.is_refundable && !/refundable/i.test(item.label ?? "") && "refundable",
     item.is_optional && "optional, not in the total",
   ]
     .filter(Boolean)

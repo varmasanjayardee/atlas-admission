@@ -23,9 +23,9 @@ const GENERAL = [
   },
 ];
 
-/** Help: what each step needs (the journey's "What I'll need" lands on #step-N, opened), then how to reach admissions */
+/** Help: what each step needs (a link to #step-N opens that one), then how to reach admissions */
 export function HelpScreen() {
-  // Open and scroll to the step a "What I'll need" button pointed at
+  // Open and scroll to the step a /help#step-N link points at
   useEffect(() => {
     const target = window.location.hash && document.getElementById(window.location.hash.slice(1));
     if (target instanceof HTMLDetailsElement) {
@@ -38,7 +38,7 @@ export function HelpScreen() {
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-6">
-      <h1 className="text-3xl font-bold tracking-tight">Help</h1>
+      <h1 className="text-3xl font-bold tracking-tight">FAQ</h1>
 
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,0.9fr)]">
         <div className="flex flex-col gap-6">

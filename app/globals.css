@@ -5,41 +5,43 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: oklch(0.9850 0 0);
+  --background: #F4F6F8;
   --foreground: oklch(0.2050 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.2050 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.2050 0 0);
-  --primary: #0A80FF;
+  /* Ardee admissions palette: button #20496A, navy text #203F5B, red #9E292B, background #F4F6F8, border #E2E6E9, secondary text #647583 */
+  --primary: #20496A;
   --primary-foreground: oklch(0.9850 0 0);
   --secondary: oklch(0.9400 0 0);
   --secondary-foreground: oklch(0.2500 0 0);
   --muted: oklch(0.9700 0 0);
-  --muted-foreground: oklch(0.4400 0 0);
+  --muted-foreground: #647583;
   --accent: oklch(0.9200 0.0400 272);
   --accent-foreground: oklch(0.2100 0.0600 268);
   --destructive: oklch(0.6300 0.1900 23.0300);
   --destructive-foreground: oklch(0.9850 0 0);
-  --border: oklch(0.9200 0 0);
-  --input: oklch(0.9400 0 0);
-  --ring: #0A80FF;
+  --border: #E2E6E9;
+  --input: #E2E6E9;
+  --ring: var(--primary);
   --chart-1: oklch(0.9200 0.0400 272);
   --chart-2: oklch(0.7500 0.1300 269);
-  --chart-3: #0A80FF;
+  --chart-3: var(--primary);
   --chart-4: oklch(0.4200 0.1500 266);
   --chart-5: oklch(0.2100 0.0600 268);
   --sidebar: oklch(0.9850 0 0);
   --sidebar-foreground: oklch(0.2050 0 0);
-  --sidebar-primary: #0A80FF;
+  --sidebar-primary: var(--primary);
   --sidebar-primary-foreground: oklch(0.9850 0 0);
   --sidebar-accent: oklch(0.9200 0.0400 272);
   --sidebar-accent-foreground: oklch(0.2100 0.0600 268);
-  --sidebar-border: oklch(0.9200 0 0);
-  --sidebar-ring: #0A80FF;
-  /* fonts come from next/font in app/layout.tsx */
-  --font-sans: var(--font-inter), sans-serif;
-  --font-serif: var(--font-cormorant), ui-serif, serif;
+  --sidebar-border: #E2E6E9;
+  --sidebar-ring: var(--primary);
+  /* system fonts; only the mono one comes from next/font in app/layout.tsx */
+  /* As in the admissions designs: Arial for text, Times for the display headings */
+  --font-sans: Arial, Helvetica, "Liberation Sans", sans-serif;
+  --font-serif: "Times New Roman", Times, "Liberation Serif", serif;
   --font-mono: var(--font-geist-mono), monospace;
   --radius: 0.5rem;
   --shadow-x: 0.25px;
@@ -56,11 +58,11 @@
   --shadow-lg: 0.25px 1px 3px 0px hsl(236.5829 64.2250% 21.4383% / 0.15), 0.25px 4px 6px -1px hsl(236.5829 64.2250% 21.4383% / 0.15);
   --shadow-xl: 0.25px 1px 3px 0px hsl(236.5829 64.2250% 21.4383% / 0.15), 0.25px 8px 10px -1px hsl(236.5829 64.2250% 21.4383% / 0.15);
   --shadow-2xl: 0.25px 1px 3px 0px hsl(236.5829 64.2250% 21.4383% / 0.38);
-  --navy: #1B3254;
+  --navy: #20496A;
   /* Navy as text; white in dark, where --navy is a surface */
-  --navy-ink: #1B3254;
+  --navy-ink: #203F5B;
   --paper: #EEEEEE;
-  --maroon: oklch(0.4300 0.1450 27);
+  --maroon: #9E292B;
   --tracking-normal: 0em;
   --spacing: 0.25rem;
 }
@@ -91,7 +93,7 @@
   --popover: var(--overlay-8dp);
   --popover-foreground: rgb(255 255 255 / 0.87);
   /* Blue 200: the brand blue, desaturated and lightened */
-  --primary: oklch(from #0A80FF 0.82 min(c, 0.09) h);
+  --primary: oklch(from #20496A 0.82 min(c, 0.09) h);
   --primary-foreground: rgb(0 0 0 / 0.87);
   --secondary: rgb(255 255 255 / 0.12);
   --secondary-foreground: rgb(255 255 255 / 0.87);
@@ -119,7 +121,7 @@
   --sidebar-ring: var(--primary);
 
   /* Navy as a surface (sidebar, panels, the bill) is a brand-tinted dark grey; as text it's high-emphasis white */
-  --navy: color-mix(in srgb, #1B3254 45%, var(--overlay-2dp));
+  --navy: color-mix(in srgb, #20496A 45%, var(--overlay-2dp));
   --navy-ink: rgb(255 255 255 / 0.87);
   --paper: var(--overlay-1dp);
 

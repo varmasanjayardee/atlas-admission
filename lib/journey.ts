@@ -24,7 +24,7 @@ export interface JourneyStep {
   action: { title: string; cta: string };
   /** What happens at this step, shown when its card is open in the journey list */
   details: string[];
-  /** What the family should have ready: the Help page's checklist, opened from each step's "What I'll need" */
+  /** What the family should have ready: the Help page's checklist (/help#step-N opens one) */
   needs: string[];
 }
 
@@ -92,7 +92,7 @@ export const JOURNEY_STEPS: JourneyStep[] = [
   },
   {
     number: 7,
-    title: "Accept offer",
+    title: "Parent accepted offer",
     description: "Accept within 7 days, with one 7-day extension if you need it",
     icon: BadgeCheckIcon,
     action: { title: "You have an offer", cta: "View offer" },
@@ -167,6 +167,11 @@ const testSkipped = (admission: Admission) =>
 /** No Atlas account below Year 6: steps 10-11 never happen and step 9 ends the journey */
 export const JOINING_STEP = 9;
 export const noAtlasAccount = (admission: Admission) => admission.child?.needs_atlas_account === false;
+/** The parts and steps this child's journey shows: 10-11 left out without an Atlas account */
+export const journeyParts = (admission: Admission): { label: string; steps: readonly number[] }[] =>
+  noAtlasAccount(admission) ? JOURNEY_PARTS.map((p) => ({ ...p, steps: p.steps.filter((n) => n <= JOINING_STEP) })) : [...JOURNEY_PARTS];
+export const journeyStepCount = (admission: Admission) => (noAtlasAccount(admission) ? JOINING_STEP : JOURNEY_STEPS.length);
+
 /** Joined: no Atlas account to wait for, and step 9 is done */
 export const joinedWithoutAtlas = (admission: Admission) => noAtlasAccount(admission) && admission.currentStep > JOINING_STEP;
 

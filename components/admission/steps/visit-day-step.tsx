@@ -2,12 +2,14 @@
 
 import { format, parseISO } from "date-fns";
 import {
-  CalendarPlusIcon,
+  ArrowUpRightIcon,
+  CalendarIcon,
   CarIcon,
+  ChevronRightIcon,
   CircleCheckIcon,
   ClockIcon,
   DownloadIcon,
-  HeadphonesIcon,
+  GlobeIcon,
   Loader2Icon,
   MapPinIcon,
   ShieldCheckIcon,
@@ -19,8 +21,9 @@ import { Button } from "@/components/ui/button";
 import { getInitials } from "@/lib/format";
 import { JOURNEY_STEPS, nextStepNumber } from "@/lib/journey";
 import { site } from "@/lib/site";
+import { cn } from "@/lib/utils";
 import { useDownloadVisitPass } from "@/services/admission.service";
-import { StepBody, StepFooter, StepSection, type StepContentProps } from "./step-layout";
+import { StepBody, StepFooter, type StepContentProps } from "./step-layout";
 
 type Row = { icon: typeof UserIcon; title: React.ReactNode; detail?: React.ReactNode; action?: React.ReactNode };
 
@@ -51,8 +54,9 @@ export function calendarUrl(title: string, start: Date, minutes: number, where: 
   return `https://calendar.google.com/calendar/render?${params}`;
 }
 
-/** Step 4: the visit pass (downloadable PDF) and everything needed on the day */
-export function VisitDayStep({ admission, state, goNext }: StepContentProps) {
+/** Step 4: the visit pass, the host, getting here and what to bring. One column in the drawer and on
+ * phones; on a wide page the pass stays pinned on the left while the rest scrolls beside it. */
+export function VisitDayStep({ admission, state, goNext, page }: StepContentProps) {
   const child = admission.child!;
   const visit = child.visit;
   const download = useDownloadVisitPass(child.id);
@@ -69,135 +73,195 @@ export function VisitDayStep({ admission, state, goNext }: StepContentProps) {
 
   const { slot } = visit;
   const starts = parseISO(`${slot.date}T${slot.start_time}`);
-  const time = slot.start_time.slice(0, 5);
+  const arrive = new Date(starts.getTime() - 10 * 60_000);
   const family = admission.lead.last_name || admission.lead.first_name;
   const childName = `${child.first_name} ${child.last_name}`.trim();
   const museum = slot.visit_type === "museum";
-  const mapUrl = `https://www.google.com/maps/search/?${new URLSearchParams({ api: "1", query: visit.campus_address || visit.campus_name })}`;
+  const campus = visit.campus_name.trim();
+  const where = visit.campus_address || campus;
+  const mapUrl = `https://www.google.com/maps/search/?${new URLSearchParams({ api: "1", query: where })}`;
+  const calendar = calendarUrl(`Campus visit · ${site.school}`, starts, slot.duration_minutes, where);
+  const host = slot.staff_names[0];
 
   return (
     <>
-      <StepBody>
-        <div className="rounded-2xl bg-muted/70 px-4 py-6">
-          <Ticket
-            image={visit.campus_image}
-            campus={visit.campus_name.trim()}
-            visitType={museum ? "Museum Guide" : "Counsellor-led"}
-            when={[
-              ["Date", format(starts, "EEE d MMM")],
-              ["Time", time],
-              ["Gate", slot.gate],
-            ]}
-            guest={`${childName} · ${child.grade}`}
-            party={[`${family} family`, `${slot.duration_minutes} min`, slot.staff_names[0] && `meeting ${slot.staff_names[0]}`]
-              .filter(Boolean)
-              .join(" · ")}
-            code={visit.gate_pass_code}
-            qr={visit.gate_pass_qr}
-            gate={slot.gate}
-            reference={child.reference}
-            visitedAt={visit.attended_at}
-          />
-        </div>
+      <StepBody className={cn("@container max-sm:px-4", page && "overflow-visible!")}>
+        <div className="grid gap-10 @3xl:grid-cols-[minmax(0,24rem)_minmax(0,1fr)] @3xl:gap-12">
+          {/* The pass: pinned beside the rest on a wide page */}
+          <div className={cn("space-y-4 @3xl:sticky @3xl:self-start", page ? "@3xl:top-20" : "@3xl:top-0")}>
+            <Heading title={visit.attended_at ? "Thank you for visiting." : "Your visit is booked."} lead="We look forward to welcoming your family." />
+            <Ticket
+              campus={campus}
+              visitType={museum ? "Museum Guide" : "Counsellor-led visit"}
+              when={[
+                ["Date", format(starts, "d MMM"), format(starts, "EEE yyyy")],
+                ["Time", format(starts, "h:mm a").toLowerCase(), `${slot.duration_minutes} min`],
+                ["Entrance", slot.gate],
+              ]}
+              guest={`${childName} · ${child.grade}`}
+              family={`${family} family`}
+              code={visit.gate_pass_code}
+              qr={visit.gate_pass_qr}
+              gate={slot.gate}
+              reference={child.reference}
+              visitedAt={visit.attended_at}
+            />
+            <Button
+              className="h-12 w-full justify-start gap-3 rounded-xl px-4 text-base font-semibold"
+              disabled={download.isPending}
+              onClick={() => download.mutate(undefined, { onError: (e) => toast.error(e.message) })}
+            >
+              {download.isPending ? <Loader2Icon className="animate-spin" /> : <DownloadIcon />}
+              <span className="flex-1 text-left">Download visit pass (PDF)</span>
+              <ChevronRightIcon />
+            </Button>
+            <a href={calendar} target="_blank" rel="noreferrer" className={LINK_ROW}>
+              <CalendarIcon className="size-5" />
+              <span className="flex-1">Add to calendar</span>
+              <ChevronRightIcon className="size-4" />
+            </a>
+          </div>
 
-        <Button
-          className="h-11 w-full rounded-xl"
-          disabled={download.isPending}
-          onClick={() => download.mutate(undefined, { onError: (e) => toast.error(e.message) })}
-        >
-          {download.isPending ? <Loader2Icon className="animate-spin" /> : <DownloadIcon />}
-          Download ticket (PDF)
-        </Button>
+          <div className="space-y-12">
+            <section className="space-y-6">
+              <Heading title="Meet your host." lead="A familiar face before you arrive." />
+              <div className="overflow-hidden rounded-2xl border bg-card">
+                <div className="h-1.5 bg-maroon" />
+                <div className="p-5 sm:p-6">
+                  <div className="flex items-center gap-5">
+                    <span className="flex size-20 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
+                      {host ? <span className="text-2xl font-semibold text-navy-ink">{getInitials(host)}</span> : <UserIcon className="size-9" />}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold tracking-wider text-maroon uppercase">Your admissions counsellor</p>
+                      <p className="mt-1 text-2xl font-bold tracking-tight text-navy-ink">{host ?? "We'll share their name soon"}</p>
+                      <p className="text-sm text-muted-foreground">{campus}</p>
+                    </div>
+                  </div>
+                  <blockquote className="mt-5 border-t pt-4 font-serif text-xl text-navy-ink italic">
+                    &ldquo;I look forward to welcoming you and guiding you through your visit.&rdquo;
+                  </blockquote>
+                  <p className="mt-3 text-xs text-muted-foreground">
+                    Your dedicated point of contact throughout the visit.
+                    {slot.staff_names.length > 1 && ` Also joining: ${slot.staff_names.slice(1).join(", ")}.`}
+                  </p>
+                </div>
+              </div>
 
-        <StepSection title="On the day">
-          <Rows
-            rows={[
-              {
-                icon: SmartphoneIcon,
-                title: `At ${slot.gate}, show this pass or tell security your code`,
-                detail: "Security checks your details and photo. The PDF has a QR code they can scan.",
-              },
-              {
-                icon: MapPinIcon,
-                title: "Your counsellor meets you just inside the gate",
-                detail: "A member of our team walks with you from there.",
-              },
-              ...(museum
-                ? [{ icon: HeadphonesIcon, title: "Headphones and a short briefing before the tour", detail: "Your counsellor accompanies you throughout." }]
-                : []),
-            ]}
-          />
-        </StepSection>
+              <div>
+                <h3 className="text-2xl font-bold tracking-tight text-navy-ink">On the day</h3>
+                <ol className="mt-5">
+                  {[
+                    [`Arrive at ${slot.gate}`, `Please arrive at ${format(arrive, "h:mm a").toLowerCase()}, 10 minutes before your visit.`],
+                    ["Check in with security", "Show your pass or gate code. Security verifies your details and photo."],
+                    ["Meet your counsellor", "They'll welcome you just inside the gate and accompany you on the tour."],
+                    ...(museum ? [["Headphones and a short briefing", "Before the museum tour; your counsellor stays with you throughout."]] : []),
+                  ].map(([title, detail], i, all) => (
+                    <li key={title} className="relative flex gap-4 pb-7 last:pb-0">
+                      {i < all.length - 1 && <span aria-hidden className="absolute top-10 bottom-0 left-5 w-0.5 -translate-x-1/2 bg-border" />}
+                      <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-navy text-sm font-semibold text-white">{i + 1}</span>
+                      <div className="pt-1.5">
+                        <p className="font-semibold">{title}</p>
+                        <p className="text-sm text-muted-foreground">{detail}</p>
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            </section>
 
-        <StepSection title="Who you will meet">
-          <Rows
-            rows={
-              slot.staff_names.length
-                ? slot.staff_names.map((name, i) => ({
-                    icon: UserIcon,
-                    title: (
-                      <span className="flex items-center gap-2">
-                        <span className="flex size-6 items-center justify-center rounded-full bg-primary text-[0.6rem] font-semibold text-primary-foreground">
-                          {getInitials(name)}
-                        </span>
-                        {name}
-                      </span>
-                    ),
-                    detail: i === 0 ? "Admission counsellor · meets you at the gate" : "Joins your visit",
-                  }))
-                : [{ icon: UserIcon, title: "Your admission counsellor", detail: "We'll share their name before the visit." }]
-            }
-          />
-        </StepSection>
-
-        <StepSection title="Getting there">
-          <Rows
-            rows={[
-              {
-                icon: MapPinIcon,
-                title: visit.campus_name,
-                detail: `${visit.campus_address} · use ${slot.gate}`,
-                action: (
-                  <a href={mapUrl} target="_blank" rel="noreferrer" className="shrink-0 text-sm font-medium text-primary hover:underline">
-                    Map
+            <section className="space-y-6">
+              <Heading title="Getting here." lead="Everything you need for a smooth arrival." />
+              <div className="rounded-2xl border bg-card p-5 sm:p-6">
+                <div className="flex items-start gap-3">
+                  <IconDot icon={MapPinIcon} />
+                  <p className="pt-1.5 text-xl font-bold tracking-tight text-navy-ink">{campus}</p>
+                </div>
+                {visit.campus_address && <p className="mt-3 text-muted-foreground">{visit.campus_address}</p>}
+                <p className="mt-4 flex items-center gap-2 rounded-xl bg-muted px-4 py-3 text-sm font-semibold text-navy-ink">
+                  <MapPinIcon className="size-4" />
+                  Visitor entrance · {slot.gate}
+                </p>
+                <a
+                  href={mapUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-4 flex h-12 items-center gap-3 rounded-xl bg-primary px-4 font-semibold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+                >
+                  <ArrowUpRightIcon className="size-5" />
+                  Open directions
+                </a>
+              </div>
+              <ul className="divide-y">
+                <InfoRow icon={CarIcon} title="Visitor parking" detail={`At ${slot.gate}, share your vehicle number plate.`} />
+                <InfoRow icon={ClockIcon} title={`Allow ${slot.duration_minutes} minutes`} detail="Plan to arrive 10 minutes early." />
+              </ul>
+              {visit.campus_vr_link && (
+                <div className="rounded-2xl bg-navy p-5 text-white sm:p-6">
+                  <p className="flex items-center gap-2 text-xs font-semibold tracking-wider text-white/75 uppercase">
+                    <GlobeIcon className="size-5" />
+                    Before you arrive
+                  </p>
+                  <p className="mt-2 font-serif text-3xl">Explore Ardee in 3D.</p>
+                  <p className="text-sm text-white/75">Walk through our learning spaces at your own pace.</p>
+                  <a
+                    href={visit.campus_vr_link}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-4 flex h-12 items-center justify-between rounded-xl bg-white px-4 font-semibold text-navy transition-colors hover:bg-white/90 focus-visible:ring-3 focus-visible:ring-white/60 focus-visible:outline-none"
+                  >
+                    Take the virtual tour
+                    <ArrowUpRightIcon className="size-5" />
                   </a>
-                ),
-              },
-              { icon: CarIcon, title: "Parking", detail: `Visitor parking at ${slot.gate}. Give your number plate at the gate.` },
-              {
-                icon: ClockIcon,
-                title: "Arrive 10 minutes early",
-                detail: `Checking in takes about a minute. The visit lasts about ${slot.duration_minutes} minutes.`,
-              },
-            ]}
-          />
-        </StepSection>
+                </div>
+              )}
+            </section>
 
-        <StepSection title="What to bring">
-          <Rows
-            rows={[
-              { icon: SmartphoneIcon, title: "Your phone, with this pass or its code" },
-              { icon: UserIcon, title: `${child.first_name}, if you'd like to`, detail: "Children are welcome on the tour." },
-              { icon: CircleCheckIcon, title: "Any questions you want answered", detail: "Your counsellor notes them so nothing is lost." },
-            ]}
-          />
-        </StepSection>
+            <section className="space-y-6">
+              <Heading title="Ready for your visit?" lead="A few simple things to bring along." />
+              <ul className="divide-y rounded-2xl border bg-card px-5">
+                <InfoRow icon={SmartphoneIcon} title="Your visit pass" detail="Keep the pass or gate code handy on your phone." />
+                <InfoRow icon={UserIcon} title="Bring your child along" detail={`We'd love for ${child.first_name} to join us and experience the campus for themselves.`} />
+                <InfoRow icon={CircleCheckIcon} title="Your questions" detail="Your counsellor will note them during the visit." />
+              </ul>
 
-        <a
-          href={calendarUrl(`Campus visit · ${site.school}`, starts, slot.duration_minutes, visit.campus_address || visit.campus_name)}
-          target="_blank"
-          rel="noreferrer"
-          className="flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium hover:bg-muted"
-        >
-          <CalendarPlusIcon className="size-4" />
-          Add to calendar
-        </a>
+              <div>
+                <h3 className="text-2xl font-bold tracking-tight text-navy-ink">Make it easy to remember.</h3>
+                <div className="mt-4 rounded-2xl bg-muted p-5">
+                  <div className="flex items-start gap-3">
+                    <CalendarIcon className="mt-0.5 size-5 shrink-0 text-navy-ink" />
+                    <div>
+                      <p className="text-lg font-bold text-navy-ink">{format(starts, "EEEE, d MMMM")}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {format(starts, "h:mm a").toLowerCase()} · {slot.duration_minutes} min · {slot.gate}
+                      </p>
+                    </div>
+                  </div>
+                  <a
+                    href={calendar}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-4 flex h-12 items-center gap-3 rounded-xl bg-primary px-4 font-semibold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+                  >
+                    <CalendarIcon className="size-5" />
+                    <span className="flex-1">Add to calendar</span>
+                    <ChevronRightIcon className="size-4" />
+                  </a>
+                </div>
+              </div>
 
-        <p className="flex items-start gap-2 text-xs text-muted-foreground">
-          <ShieldCheckIcon className="mt-0.5 size-3.5 shrink-0" />
-          Your details are shared with the school gate for security verification only. Gate staff don&apos;t see payments, assessments or
-          offers.
-        </p>
+              <div className="flex items-start gap-3 rounded-2xl border bg-card p-5">
+                <ShieldCheckIcon className="size-6 shrink-0 text-navy-ink" />
+                <div>
+                  <p className="font-semibold text-navy-ink">Your privacy matters.</p>
+                  <p className="text-sm text-muted-foreground">
+                    Gate staff receive only the details needed for security verification, not payments, assessments or admission offers.
+                  </p>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
       </StepBody>
 
       {state === "done" && (
@@ -211,6 +275,38 @@ export function VisitDayStep({ admission, state, goNext }: StepContentProps) {
   );
 }
 
+const LINK_ROW =
+  "flex h-12 items-center gap-3 rounded-xl border bg-card px-4 font-semibold text-navy-ink transition-colors hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none";
+
+function Heading({ title, lead }: { title: string; lead: string }) {
+  return (
+    <div>
+      <h2 className="font-serif text-4xl leading-tight text-navy-ink sm:text-5xl">{title}</h2>
+      <p className="mt-1 text-muted-foreground">{lead}</p>
+    </div>
+  );
+}
+
+function IconDot({ icon: Icon }: { icon: typeof UserIcon }) {
+  return (
+    <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted text-navy-ink">
+      <Icon className="size-5" />
+    </span>
+  );
+}
+
+function InfoRow({ icon, title, detail }: { icon: typeof UserIcon; title: string; detail: string }) {
+  return (
+    <li className="flex items-start gap-4 py-4">
+      <IconDot icon={icon} />
+      <div className="min-w-0 pt-0.5">
+        <p className="font-semibold">{title}</p>
+        <p className="text-sm text-muted-foreground">{detail}</p>
+      </div>
+    </li>
+  );
+}
+
 // Cuts a half-circle notch into each side of the tear line; real holes, so the shadow follows them
 const NOTCHES = {
   WebkitMask:
@@ -218,26 +314,25 @@ const NOTCHES = {
   mask: "radial-gradient(circle at 0 50%, transparent 11px, #000 11.5px) left / 51% 100% no-repeat, radial-gradient(circle at 100% 50%, transparent 11px, #000 11.5px) right / 51% 100% no-repeat",
 };
 
-/** The visit pass as an event ticket: poster, the when, a tear line, and the gate stub */
+/** The visit pass as an event ticket: header, the when, the family, a tear line, and the gate stub */
 function Ticket({
-  image,
   campus,
   visitType,
   when,
   guest,
-  party,
+  family,
   code,
   qr,
   gate,
   reference,
   visitedAt,
 }: {
-  image: string | null;
   campus: string;
   visitType: string;
-  when: [string, string][];
+  /** label, value, and an optional line under it */
+  when: [string, string, string?][];
   guest: string;
-  party: string;
+  family: string;
   code: string;
   qr: string;
   gate: string;
@@ -248,32 +343,31 @@ function Ticket({
   return (
     <article
       aria-label={visitedAt ? "Visit pass, visited" : "Visit pass"}
-      className="mx-auto max-w-sm drop-shadow-[0_18px_28px_color-mix(in_oklab,var(--navy)_22%,transparent)]"
+      className="drop-shadow-[0_18px_28px_color-mix(in_oklab,var(--navy)_18%,transparent)]"
     >
-      <header className="relative isolate h-44 overflow-hidden rounded-t-[1.75rem] bg-navy text-white">
-        {/* eslint-disable-next-line @next/next/no-img-element -- presigned bucket URL */}
-        {image && <img src={image} alt="" className="absolute inset-0 -z-10 size-full object-cover" />}
-        <div className="absolute inset-0 -z-10 bg-linear-to-t from-navy via-navy/70 to-navy/15" />
-        <div className="absolute inset-x-5 bottom-4">
-          <span className="rounded-full bg-white/95 px-2.5 py-1 text-xs font-semibold text-navy">{visitType}</span>
-          <h3 className="mt-2.5 font-serif text-[2rem] leading-none italic">Campus visit</h3>
-          <p className="mt-1 text-sm text-white/75">{campus}</p>
-        </div>
+      <header className="rounded-t-[1.75rem] border-b-[6px] border-maroon bg-navy px-6 pt-6 pb-5 text-white">
+        <p className="text-xs font-semibold tracking-wider uppercase">Visitor pass</p>
+        <h3 className="mt-1 font-serif text-4xl leading-tight">Campus visit</h3>
+        <p className="mt-1 text-white/80">{campus}</p>
       </header>
 
-      <div className="relative bg-card px-5 pt-5 pb-3">
+      <div className="relative bg-card px-6 pt-5 pb-4">
         {visitedAt && <VisitedStamp at={visitedAt} />}
         <dl className="grid grid-cols-3 gap-3">
-          {when.map(([label, value]) => (
+          {when.map(([label, value, sub]) => (
             <div key={label} className="min-w-0">
-              <dt className="text-xs text-muted-foreground">{label}</dt>
-              <dd className="truncate text-xl font-bold tracking-tight tabular-nums">{value}</dd>
+              <dt className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">{label}</dt>
+              <dd className="mt-1 text-lg font-bold tracking-tight whitespace-nowrap tabular-nums sm:text-xl">{value}</dd>
+              {sub && <dd className="text-sm text-muted-foreground">{sub}</dd>}
             </div>
           ))}
         </dl>
-        <div className="mt-4 border-t pt-3">
-          <p className="font-semibold">{guest}</p>
-          <p className="text-sm text-muted-foreground">{party}</p>
+        <div className="mt-4 border-t pt-4">
+          <p className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Visiting family</p>
+          <p className="mt-1 text-lg font-bold">{guest}</p>
+          <p className="text-sm text-muted-foreground">
+            {family} | {visitType}
+          </p>
         </div>
       </div>
 
@@ -281,15 +375,18 @@ function Ticket({
         <div className="absolute inset-x-5 top-1/2 border-t-2 border-dashed border-border" />
       </div>
 
-      <div className="flex items-center gap-4 rounded-b-[1.75rem] bg-card px-5 pt-1 pb-5">
-        {/* eslint-disable-next-line @next/next/no-img-element -- inline SVG data URI */}
-        <img src={qr} alt={`QR code for gate pass ${code}`} className="size-28 shrink-0 rounded-lg bg-white p-1.5 ring-1 ring-border" />
-        <div className="min-w-0">
-          <p className="text-xs text-muted-foreground">Gate pass</p>
-          <p className="font-mono text-3xl font-bold tracking-[0.18em] text-navy">{code}</p>
-          <p className="mt-1 text-sm">{visitedAt ? `Checked in at ${gate}` : `Show at ${gate}, 10 minutes early`}</p>
-          <p className="text-xs text-muted-foreground">Booking {reference}</p>
+      <div className="rounded-b-[1.75rem] bg-card px-6 pt-1 pb-5">
+        <div className="flex items-center gap-4 sm:gap-5">
+          {/* eslint-disable-next-line @next/next/no-img-element -- inline SVG data URI */}
+          <img src={qr} alt={`QR code for gate pass ${code}`} className="size-24 shrink-0 rounded-lg bg-white p-1.5 sm:size-28" />
+          <div className="min-w-0">
+            <p className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Gate pass</p>
+            <p className="text-3xl font-bold tracking-tight whitespace-nowrap text-navy-ink sm:text-4xl">{code}</p>
+            <p className="mt-1 text-sm font-semibold">{visitedAt ? `Checked in at ${gate}.` : `Present at ${gate}.`}</p>
+            {!visitedAt && <p className="text-sm text-muted-foreground">Arrive 10 minutes early.</p>}
+          </div>
         </div>
+        <p className="mt-4 text-xs text-muted-foreground">Ref. {reference}</p>
       </div>
     </article>
   );

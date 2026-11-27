@@ -10,8 +10,8 @@ import { useStepParam } from "@/hooks/use-step-param";
 import { canOpenStep, getStepState, JOURNEY_STEPS, nextStepNumber, TOTAL_STEPS, type StepState } from "@/lib/journey";
 import type { Admission } from "@/types/admission.types";
 
-export const STATE_BADGE: Record<StepState, { label: string; variant: "default" | "secondary" | "outline" }> = {
-  done: { label: "Completed", variant: "secondary" },
+export const STATE_BADGE: Record<StepState, { label: string; variant: "default" | "secondary" | "outline"; className?: string }> = {
+  done: { label: "Completed", variant: "secondary", className: "bg-green-50 text-green-800" },
   current: { label: "In progress", variant: "default" },
   upcoming: { label: "Not started", variant: "outline" },
   closed: { label: "Closed", variant: "outline" },
@@ -49,7 +49,7 @@ export function StepDrawer({ admission }: { admission: Admission }) {
                 </DrawerDescription>
                 <div className="mt-1 flex flex-wrap items-center gap-2">
                   <DrawerTitle className="text-xl font-bold tracking-tight">{shown.title}</DrawerTitle>
-                  <Badge variant={STATE_BADGE[state].variant}>{STATE_BADGE[state].label}</Badge>
+                  <Badge variant={STATE_BADGE[state].variant} className={STATE_BADGE[state].className}>{STATE_BADGE[state].label}</Badge>
                 </div>
               </div>
               <DrawerClose

@@ -75,8 +75,8 @@ export function JoiningStep({ admission, state, goNext }: StepContentProps) {
             </span>
             <h3 className="mt-4 font-serif text-3xl italic">Congratulations!</h3>
             <p className="mt-1 text-sm text-white/75">
-              Welcome to {site.school}, {child.first_name}.
-              {child.joining_date && ` We look forward to seeing you on ${format(parseISO(child.joining_date), "EEEE d MMMM yyyy")}.`}
+              Your joining date is confirmed
+              {child.joining_date && ` for ${format(parseISO(child.joining_date), "EEEE d MMMM yyyy")}`} and {child.first_name}&apos;s admission is complete. Welcome to {site.school}.
             </p>
           </section>
         )}

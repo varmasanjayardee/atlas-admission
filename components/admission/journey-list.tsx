@@ -16,10 +16,11 @@ import {
   JOURNEY_PARTS,
   JOURNEY_STEPS,
   skippedNote,
-  TOTAL_STEPS,
   type JourneyStep,
   type StepState,
   joinedWithoutAtlas,
+  journeyParts,
+  journeyStepCount,
 } from "@/lib/journey";
 import type { Admission } from "@/types/admission.types";
 
@@ -53,11 +54,11 @@ export function JourneyList({ admission }: { admission: Admission }) {
             Your journey
           </h2>
           <span className="rounded-full bg-muted px-3 py-1 text-sm font-medium text-muted-foreground tabular-nums">
-            {done} of {TOTAL_STEPS} done
+            {done} of {journeyStepCount(admission)} done
           </span>
         </div>
 
-        {JOURNEY_PARTS.map((part, p) => (
+        {journeyParts(admission).map((part, p) => (
           <div key={part.label}>
             <div className="mt-7 mb-3 flex items-center gap-3">
               <span className="flex size-7 items-center justify-center rounded-full bg-navy font-serif text-base text-white italic">{partLetter(p)}</span>
@@ -90,6 +91,7 @@ function Hero({ admission, step }: { admission: Admission; step: JourneyStep }) 
   const p = partIndexOf(step.number);
   const ended = endedTitle(admission);
   const joined = joinedWithoutAtlas(admission);
+  const count = journeyStepCount(admission);
   const Icon = step.icon;
 
   return (
@@ -100,16 +102,16 @@ function Hero({ admission, step }: { admission: Admission; step: JourneyStep }) 
         </p>
         <p className="mt-2 text-6xl leading-none font-bold tracking-tighter tabular-nums sm:text-7xl">
           Step {step.number}
-          <span className="ml-2 text-2xl font-medium tracking-normal text-muted-foreground">of {TOTAL_STEPS}</span>
+          <span className="ml-2 text-2xl font-medium tracking-normal text-muted-foreground">of {count}</span>
         </p>
-        <h1 className="mt-3 text-3xl font-bold tracking-tight text-balance sm:text-4xl">{ended ?? (joined ? `Congratulations, ${admission.child?.first_name} is all set to join` : step.action.title)}</h1>
+        <h1 className="mt-3 text-3xl font-bold tracking-tight text-balance sm:text-4xl">{ended ?? (joined ? "Congratulations! Your joining date is confirmed and the admission is complete" : step.action.title)}</h1>
         <p className="mt-2 text-muted-foreground">
           {step.title} · Enquiry made on {format(parseISO(admission.enquiryDate), "d MMMM yyyy")}
         </p>
 
         {/* One segment per step; the part labels sit under their share of them (5, 3, 3) */}
-        <div className="mt-6 grid grid-cols-11 gap-1.5" aria-label={`${step.number - 1} of ${TOTAL_STEPS} steps done`} role="img">
-          {JOURNEY_STEPS.map((s) => {
+        <div className="mt-6 grid gap-1.5" style={{ gridTemplateColumns: `repeat(${count}, minmax(0, 1fr))` }} aria-label={`${step.number - 1} of ${count} steps done`} role="img">
+          {JOURNEY_STEPS.slice(0, count).map((s) => {
             const state = getStepState(s.number, admission);
             return (
               <span
@@ -119,8 +121,8 @@ function Hero({ admission, step }: { admission: Admission; step: JourneyStep }) 
             );
           })}
         </div>
-        <div className="mt-2 grid grid-cols-11 gap-1.5 text-xs font-medium text-muted-foreground" aria-hidden>
-          {JOURNEY_PARTS.map((part) => (
+        <div className="mt-2 grid gap-1.5 text-xs font-medium text-muted-foreground" style={{ gridTemplateColumns: `repeat(${count}, minmax(0, 1fr))` }} aria-hidden>
+          {journeyParts(admission).map((part) => (
             <span key={part.label} style={{ gridColumn: `span ${part.steps.length}` }}>
               {part.label}
             </span>
@@ -151,26 +153,17 @@ function Hero({ admission, step }: { admission: Admission; step: JourneyStep }) 
 
 function StepCard({ step, state, skippedNote, next, open, onToggle }: { step: JourneyStep; state: StepState; skippedNote: string; next: boolean; open: boolean; onToggle: () => void }) {
   const bodyId = `step-${step.number}-body`;
-  // Help page, with this step's checklist opened
-  const needsButton = (
-    <Link
-      href={`/help#step-${step.number}`}
-      className="inline-flex rounded-full border bg-background px-5 py-2.5 text-sm font-semibold transition-colors hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
-    >
-      What I&apos;ll need
-    </Link>
-  );
+  // Not applicable (no aptitude test, no Atlas account): a plain row that doesn't open
+  const skipped = state === "skipped";
+  const Header = skipped ? "div" : "button";
 
   return (
     <li
       aria-current={state === "current" ? "step" : undefined}
-      className={cn("overflow-hidden rounded-2xl border bg-card transition-shadow", state === "current" && "border-primary ring-3 ring-primary/15")}
+      className={cn("overflow-hidden rounded-2xl border bg-card transition-shadow", state === "current" && "border-primary  ")}
     >
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-expanded={open}
-        aria-controls={bodyId}
+      <Header
+        {...(skipped ? {} : { type: "button" as const, onClick: onToggle, "aria-expanded": open, "aria-controls": bodyId })}
         className="grid w-full grid-cols-[3.25rem_minmax(0,1fr)] items-center gap-3 p-4 text-left outline-none focus-visible:bg-muted/50 sm:grid-cols-[4.5rem_minmax(0,1fr)_auto] sm:gap-5 sm:px-5"
       >
         <span
@@ -183,15 +176,15 @@ function StepCard({ step, state, skippedNote, next, open, onToggle }: { step: Jo
         </span>
         <span className="min-w-0">
           <span className="block text-lg font-semibold">{step.title}</span>
-          <span className="mt-0.5 block text-sm text-muted-foreground">{step.description}</span>
+          <span className="mt-0.5 block text-sm text-muted-foreground">{skipped ? skippedNote : step.description}</span>
         </span>
         <span className="col-span-full flex items-center gap-2 sm:col-span-1">
           <StatePill state={state} next={next} />
-          <ChevronRightIcon className={cn("size-5 text-muted-foreground/60 transition-transform", open && "rotate-90")} />
+          {!skipped && <ChevronRightIcon className={cn("size-5 text-muted-foreground/60 transition-transform", open && "rotate-90")} />}
         </span>
-      </button>
+      </Header>
 
-      {open && (
+      {open && !skipped && (
         <div id={bodyId} className="border-t px-4 pt-4 pb-5 sm:pr-5 sm:pl-[6.75rem]">
           <h4 className="text-xs font-semibold tracking-[0.15em] text-muted-foreground uppercase">What happens at this step</h4>
           <ul className="mt-3 flex flex-col gap-2 text-sm leading-relaxed">
@@ -212,14 +205,9 @@ function StepCard({ step, state, skippedNote, next, open, onToggle }: { step: Jo
               </Link>
             ) : (
               <p className="text-sm text-muted-foreground">
-                {state === "skipped"
-                  ? skippedNote
-                  : state === "closed"
-                    ? "This step won't open for this application."
-                    : `Opens once step ${step.number - 1} is complete.`}
+                {state === "closed" ? "This step won't open for this application." : `Opens once step ${step.number - 1} is complete.`}
               </p>
             )}
-            {state !== "done" && state !== "closed" && state !== "skipped" && needsButton}
           </div>
 
         </div>

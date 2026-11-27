@@ -1,7 +1,7 @@
 "use client";
 
 import { format, parseISO } from "date-fns";
-import { CheckIcon, CircleAlertIcon, CircleCheckIcon, HourglassIcon, XIcon } from "lucide-react";
+import { CheckIcon, CircleCheckIcon, XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { JOURNEY_STEPS } from "@/lib/journey";
 import { site } from "@/lib/site";
@@ -9,163 +9,259 @@ import { cn } from "@/lib/utils";
 import type { Child } from "@/schemas/auth.schema";
 import { StepBody, StepFooter, type StepContentProps } from "./step-layout";
 
-type NodeState = "done" | "current" | "upcoming" | "good" | "bad";
+type RowState = "done" | "current" | "upcoming" | "good" | "bad";
 
-interface Node {
+interface Row {
   title: string;
-  detail?: string;
-  state: NodeState;
+  /** ISO date, shown on the right */
+  at?: string | null;
+  /** A short word (Now, Next) on the right instead of a date */
+  word?: string;
+  state: RowState;
 }
 
-// What the family sees for each review status
+// What the family sees for each review status; the dot on the card's pill carries the meaning
 const DECISION = {
   pending: {
     label: "In review",
-    icon: HourglassIcon,
-    tone: "bg-amber-50 text-amber-800 ring-amber-200",
-    title: (name: string) => `${name}'s application is in review`,
-    body: "The admissions team is looking at the application, the campus visit and the test together. This page updates as soon as there's a decision.",
+    dot: "bg-white",
+    value: "Within 48 hours",
+    body: "Of your campus visit. We'll notify you when your decision is available in MyArdee.",
   },
   waitlisted: {
     label: "Waiting list",
-    icon: HourglassIcon,
-    tone: "bg-sky-50 text-sky-900 ring-sky-200",
-    title: (name: string) => `${name} is on the waiting list`,
-    body: "The application was strong, but the grade is full right now. If a place opens, it's offered here first, so there's nothing you need to do.",
+    dot: "bg-amber-400",
+    value: "On the waiting list",
+    body: "The grade is full right now. If a place opens, it's offered here first, so there's nothing you need to do.",
   },
   offered: {
     label: "Accepted",
-    icon: CircleCheckIcon,
-    tone: "bg-green-50 text-green-800 ring-green-200",
-    title: (name: string) => `${name} has been offered a place`,
-    body: "Accept the offer in the next step to hold the seat.",
+    dot: "bg-green-400",
+    value: "A place is offered",
+    body: "Accept the offer in the next step to hold the place.",
   },
   rejected: {
     label: "Rejected",
-    icon: XIcon,
-    tone: "bg-red-50 text-red-800 ring-red-200",
-    title: () => "We're unable to offer a place",
+    dot: "bg-red-400",
+    value: "Unable to offer a place",
     body: "Thank you for considering Ardee and for visiting us.",
   },
   not_offered: {
     label: "Not offered",
-    icon: CircleAlertIcon,
-    tone: "bg-orange-50 text-orange-800 ring-orange-200",
-    title: () => "A place can't be offered this time",
+    dot: "bg-red-400",
+    value: "No place this time",
     body: "This is usually down to the number of seats in the grade, not the application.",
   },
 } as const;
 
 // Declined or expired later, at the offer step: the review itself still offered a place
-const reviewOutcome = (child: Child) => (child.outcome === "declined" || child.outcome === "withdrawn" ? "offered" : child.outcome);
+const reviewOutcome = (child: Child) =>
+  child.outcome === "declined" || child.outcome === "withdrawn"
+    ? "offered"
+    : child.outcome;
 
-const when = (iso?: string) => (iso ? format(parseISO(iso), "d MMM yyyy") : undefined);
-
-function timeline(child: Child): Node[] {
-  const doneAt = (step: number) => child.steps.find((s) => s.step === step)?.completed_at;
+function progress(child: Child): Row[] {
+  const doneAt = (step: number) =>
+    child.steps.find((s) => s.step === step)?.completed_at;
   const outcome = reviewOutcome(child);
   const decided = outcome !== "pending" && outcome !== "waitlisted";
-  const decision = DECISION[outcome];
 
   return [
-    { title: "Application submitted", detail: when(doneAt(1)), state: "done" },
-    { title: "Application fee paid", detail: when(doneAt(2)), state: "done" },
-    { title: "Campus visit booked", detail: when(doneAt(3)), state: "done" },
-    { title: "Visited the campus", detail: when(doneAt(4)), state: "done" },
-    // Applications reviewed before the test step existed skipped it
+    { title: "Application submitted", at: doneAt(1), state: "done" },
+    { title: "Application fee paid", at: doneAt(2), state: "done" },
+    { title: "Campus visit booked", at: doneAt(3), state: "done" },
+    { title: "Campus visit completed", at: doneAt(4), state: "done" },
     // Only a test that happened: skipped (or Early Years) leaves no test date
-    ...(doneAt(5) && child.aptitude_test_at ? [{ title: "Took the aptitude test", detail: when(doneAt(5)), state: "done" as const }] : []),
+    ...(doneAt(5) && child.aptitude_test_at
+      ? [
+          {
+            title: "Aptitude test taken",
+            at: doneAt(5),
+            state: "done" as const,
+          },
+        ]
+      : []),
     {
-      title: "In review with the admissions team",
-      detail: decided
-        ? `Finished ${when(child.reviewed_at ?? doneAt(6)) ?? ""}`
-        : outcome === "waitlisted"
-          ? "On the waiting list"
-          : "Happening now",
+      title: "Admissions team review",
+      ...(decided ? { at: child.reviewed_at ?? doneAt(6) } : { word: "Now" }),
       state: decided ? "done" : "current",
     },
     {
-      title: decided ? (decision?.label ?? "Decision") : "Decision",
-      detail: decided ? when(child.reviewed_at ?? undefined) : "Accepted, waiting list, rejected or not offered",
+      title: decided ? DECISION[outcome].label : "Admissions decision",
+      ...(decided ? { at: child.reviewed_at } : { word: "Next" }),
       state: !decided ? "upcoming" : outcome === "offered" ? "good" : "bad",
     },
   ];
 }
 
-/** Step 6: where the application stands, as a vertical timeline, and the decision once there is one */
+/** Step 6: thanks for visiting, where the review stands, and the progress so far */
 export function ReviewStep({ admission, goNext }: StepContentProps) {
   const child = admission.child!;
-  const name = child.first_name;
   const outcome = reviewOutcome(child);
   const decision = DECISION[outcome];
-  const Icon = decision.icon;
-  const nodes = timeline(child);
-  // The line fills to the last reached point
-  const reached = nodes.findLastIndex((n) => n.state !== "upcoming");
-  const fill = (reached / (nodes.length - 1)) * 100;
+  const waiting = outcome === "pending" || outcome === "waitlisted";
+  const rows = progress(child);
+  const completed = rows.filter((r) => r.state === "done").length;
 
   return (
     <>
-      <StepBody>
-        <section className={cn("rounded-2xl p-5 ring-1", decision.tone)} aria-live="polite">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/70 px-2.5 py-1 text-xs font-semibold">
-            <Icon className="size-3.5" />
-            {decision.label}
-          </span>
-          <h3 className="mt-3 text-xl leading-snug font-bold tracking-tight">{decision.title(name)}</h3>
-          <p className="mt-1 text-sm opacity-90">{decision.body}</p>
-          {child.review_note && (
-            <blockquote className="mt-4 border-l-2 border-current/30 pl-3 text-sm whitespace-pre-line">{child.review_note}</blockquote>
-          )}
-        </section>
+      <StepBody className="@container max-sm:px-4">
+        <div className="grid gap-8 @3xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] @3xl:gap-12">
+          <div className="space-y-8">
+            <div>
+              <p className="text-xs font-bold tracking-wider text-muted-foreground uppercase">
+                Admissions review
+              </p>
+              <h2 className="mt-3 font-serif text-4xl leading-tight text-navy-ink sm:text-5xl">
+                Thank you for visiting.
+              </h2>
+              <p className="mt-2 text-muted-foreground">
+                It was a pleasure welcoming your family to Ardee. We hope you
+                enjoyed experiencing our campus.
+              </p>
+            </div>
 
-        <ol className="relative pl-1" aria-label="Application progress">
-          {/* Track, and the fill that grows down it once */}
-          <span aria-hidden className="absolute top-3 bottom-3 left-[1.0625rem] w-0.5 rounded-full bg-border" />
-          <span
-            aria-hidden
-            className="absolute top-3 left-[1.0625rem] w-0.5 origin-top rounded-full bg-primary transition-transform duration-[900ms] ease-[cubic-bezier(0.3,0.7,0.2,1)] starting:scale-y-0 motion-reduce:transition-none"
-            style={{ height: `calc((100% - 1.5rem) * ${fill / 100})` }}
-          />
-
-          {nodes.map((node) => (
-            <li
-              key={node.title}
-              aria-current={node.state === "current" ? "step" : undefined}
-              className="relative flex gap-4 pb-6 last:pb-0"
+            <section
+              className="rounded-3xl bg-navy p-6 text-white sm:p-8"
+              aria-live="polite"
             >
-              <Dot state={node.state} />
-              <div className="pt-1.5">
-                <p
+              <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-2 text-xs font-bold tracking-wider uppercase">
+                <span
+                  aria-hidden
+                  className={cn("size-2 rounded-full", decision.dot)}
+                />
+                {decision.label}
+              </span>
+              <p className="mt-4 text-2xl font-bold">
+                {child.first_name}&apos;s application
+              </p>
+              {admission.campus && (
+                <p className="mt-1 text-white/80">{admission.campus}</p>
+              )}
+              <div className="mt-6 border-t border-white/20 pt-6">
+                <p className="text-xs font-bold tracking-wider text-white/80 uppercase">
+                  Your decision
+                </p>
+                <p className="mt-3 font-serif text-4xl leading-tight sm:text-5xl">
+                  {decision.value}
+                </p>
+                <p className="mt-2 text-white/80">{decision.body}</p>
+                {child.review_note && (
+                  <p className="mt-4 border-l-2 border-white/30 pl-4 whitespace-pre-line text-white/90">
+                    {child.review_note}
+                  </p>
+                )}
+              </div>
+            </section>
+
+            {waiting && (
+              <div className="flex items-center gap-4 rounded-2xl border bg-card p-5">
+                <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-green-50 text-green-700">
+                  <CircleCheckIcon className="size-6" />
+                </span>
+                <div>
+                  <p className="font-bold text-navy-ink">
+                    No action needed right now
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    We&apos;ll contact you if we need anything further.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <section className="@3xl:pt-12">
+            <div className="flex items-baseline justify-between gap-4">
+              <h3 className="text-2xl font-bold text-navy-ink">
+                Your progress
+              </h3>
+              <p className="text-sm font-bold text-muted-foreground tabular-nums">
+                {completed} completed
+              </p>
+            </div>
+            <ol className="mt-4" aria-label="Application progress">
+              {rows.map((row, i) => (
+                <li
+                  key={row.title}
+                  aria-current={row.state === "current" ? "step" : undefined}
                   className={cn(
-                    "font-medium",
-                    node.state === "upcoming" && "text-muted-foreground",
-                    node.state === "good" && "text-green-700",
-                    node.state === "bad" && "text-red-700"
+                    "relative flex items-center gap-3 rounded-xl px-3 py-3 sm:gap-4 sm:px-4",
+                    row.state === "current" && "bg-primary/10",
                   )}
                 >
-                  {node.title}
-                </p>
-                {node.detail && <p className="text-sm text-muted-foreground">{node.detail}</p>}
-              </div>
-            </li>
-          ))}
-        </ol>
+                  {/* The connector down to the next row, while the journey has reached it */}
+                  {i < rows.length - 1 && row.state === "done" && (
+                    <span
+                      aria-hidden
+                      className="absolute top-1/2 left-7 h-full w-0.5 -translate-x-1/2 bg-green-200 sm:left-8"
+                    />
+                  )}
+                  <Marker state={row.state} />
+                  <span
+                    className={cn(
+                      "min-w-0 flex-1 font-bold",
+                      row.state === "upcoming" &&
+                        "font-normal text-muted-foreground",
+                      row.state === "current" && "text-navy-ink",
+                      row.state === "good" && "text-green-700",
+                      row.state === "bad" && "text-red-700",
+                    )}
+                  >
+                    {row.title}
+                  </span>
+                  {row.word ? (
+                    <span
+                      className={cn(
+                        "shrink-0 text-xs font-bold tracking-wider uppercase",
+                        row.state === "current"
+                          ? "text-navy-ink"
+                          : "text-muted-foreground",
+                      )}
+                    >
+                      {row.word}
+                    </span>
+                  ) : (
+                    row.at && (
+                      <time
+                        dateTime={row.at}
+                        className="shrink-0 text-sm text-muted-foreground tabular-nums"
+                      >
+                        {format(parseISO(row.at), "d MMM")}
+                        <span className="max-sm:hidden">
+                          {" "}
+                          {format(parseISO(row.at), "yyyy")}
+                        </span>
+                      </time>
+                    )
+                  )}
+                </li>
+              ))}
+            </ol>
+          </section>
 
-        {(outcome === "rejected" || outcome === "not_offered") && (
-          <p className="text-sm text-muted-foreground">
-            Questions about the decision? Call{" "}
-            <a href={`tel:${site.helpLine}`} className="font-medium text-primary hover:underline">
-              {site.helpLine}
-            </a>
-            .
-          </p>
-        )}
+          {(outcome === "rejected" || outcome === "not_offered") && (
+            <p className="text-sm text-muted-foreground">
+              Questions about the decision? Call{" "}
+              <a
+                href={`tel:${site.helpLine}`}
+                className="font-medium text-primary hover:underline"
+              >
+                {site.helpLine}
+              </a>
+              .
+            </p>
+          )}
+        </div>
       </StepBody>
 
       {outcome === "offered" && (
         <StepFooter>
-          <Button size="lg" className="h-12 rounded-xl text-base font-semibold" onClick={goNext}>
+          <Button
+            size="lg"
+            className="h-12 rounded-xl text-base font-semibold"
+            onClick={goNext}
+          >
             Next: {JOURNEY_STEPS[6].title}
           </Button>
         </StepFooter>
@@ -174,28 +270,31 @@ export function ReviewStep({ admission, goNext }: StepContentProps) {
   );
 }
 
-function Dot({ state }: { state: NodeState }) {
+function Marker({ state }: { state: RowState }) {
+  if (state === "current")
+    return (
+      <span className="relative z-10 flex size-8 shrink-0 items-center justify-center rounded-full bg-navy">
+        <span className="size-3 rounded-full bg-white" />
+      </span>
+    );
+  if (state === "upcoming")
+    return (
+      <span className="relative z-10 size-8 shrink-0 rounded-full border-2 border-border bg-card" />
+    );
   return (
     <span
       className={cn(
-        "relative z-10 flex size-9 shrink-0 items-center justify-center rounded-full ring-4 ring-popover",
-        state === "done" && "bg-primary text-primary-foreground",
-        state === "current" && "bg-amber-500 text-white",
-        state === "upcoming" && "border-2 border-dashed border-muted-foreground/40 bg-popover",
-        state === "good" && "bg-green-600 text-white",
-        state === "bad" && "bg-red-600 text-white"
+        "relative z-10 flex size-8 shrink-0 items-center justify-center rounded-full",
+        state === "bad"
+          ? "bg-red-50 text-red-700"
+          : "bg-green-50 text-green-700",
       )}
     >
-      {state === "current" && (
-        <span aria-hidden className="absolute inset-0 rounded-full bg-amber-500/50 motion-safe:animate-ping" />
-      )}
-      {state === "done" || state === "good" ? (
-        <CheckIcon className="size-4" strokeWidth={3} />
-      ) : state === "bad" ? (
+      {state === "bad" ? (
         <XIcon className="size-4" strokeWidth={3} />
-      ) : state === "current" ? (
-        <HourglassIcon className="relative size-4" />
-      ) : null}
+      ) : (
+        <CheckIcon className="size-4" strokeWidth={3} />
+      )}
     </span>
   );
 }

@@ -159,7 +159,7 @@ function StepStop({ step, i, state }: Stop) {
       className={cn(
         "relative flex size-full items-center justify-center rounded-[1.4rem] transition-transform duration-200",
         openable && "group-hover:-translate-y-0.5",
-        state === "done" && "bg-primary text-primary-foreground shadow-xl shadow-primary/35",
+        state === "done" && "bg-green-600 text-white shadow-xl shadow-green-600/35",
         state === "current" && "bg-card text-primary shadow-xl shadow-primary/25 ring-[3px] ring-primary",
         state === "upcoming" && "border-2 border-dashed border-navy-ink/20 bg-card/70 text-navy-ink/35 backdrop-blur",
         (state === "closed" || state === "skipped") && "bg-muted text-muted-foreground"
